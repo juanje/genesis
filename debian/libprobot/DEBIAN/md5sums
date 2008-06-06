@@ -1,0 +1,6 @@
+eb8b6a59feb6e5f2409aecf27922d4d5  usr/share/doc/libprobot/copyright
+3d7fc1179aee2cf5a1346b3945b682f2  usr/share/doc/libprobot/changelog.gz
+1f5f2ed6458c753def8ae19e90f8309e  usr/lib/libprobot.so
+81511eafb645984889e9cc17a4cfec58  usr/lib/libprobot.a
+5abbc0568ffdb7db7f477828e81fbe83  usr/lib/libprobot.la
+4d003da9f22cd4d3a3a692043cdd6186  usr/bin/probot_test
