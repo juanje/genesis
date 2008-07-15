@@ -1,8 +1,9 @@
 probot (0.0.1-1) hardy; urgency=low
 
   * Add immediate-response-startup
+  * Add banner as immediate-response-startup if no splach screen is defined.
 
- -- Horace Li <horace.li@intel.com>  Tue, 15 Jul 2008 12:34:45 +0800
+ -- Horace Li <horace.li@intel.com>  Tue, 15 Jul 2008 13:36:27 +0800
 
 probot (0.0.1) UNRELEASED; urgency=low
 
