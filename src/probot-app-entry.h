@@ -35,6 +35,9 @@ typedef struct _ProbotAppEntryPrivate ProbotAppEntryPrivate;
 #define IS_PROBOT_APP_ENTRY_CLASS(klass)     (G_TYPE_CHECK_CLASS_TYPE ((klass), PROBOT_TYPE_APP_ENTRY))
 #define PROBOT_APP_ENTRY_GET_CLASS(obj)      (G_TYPE_INSTANCE_GET_CLASS ((obj), PROBOT_TYPE_APP_ENTRY, ProbotAppEntryClass))
 
+#define KEY_FILE_DESKTOP_KEY_X_SPLASH "X-Splash"
+#define DEFAULT_SPLASH_SCREEN_PATH "/usr/share/pixmaps/splash"
+
 struct _ProbotAppEntry {
   GObject parent;
 

@@ -9492,8 +9492,16 @@ m4trace:configure.ac:49: -1- PKG_CHECK_EXISTS([libxml-2.0], [pkg_cv_[]LIBXML_LIB
 m4trace:configure.ac:49: -1- _PKG_SHORT_ERRORS_SUPPORTED
 m4trace:configure.ac:50: -1- m4_pattern_allow([^LIBXML_LIBS$])
 m4trace:configure.ac:51: -1- m4_pattern_allow([^LIBXML_CFLAGS$])
-m4trace:configure.ac:54: -1- m4_pattern_allow([^probotdir$])
-m4trace:configure.ac:63: -1- m4_pattern_allow([^LIB@&t@OBJS$])
-m4trace:configure.ac:63: -1- m4_pattern_allow([^LTLIBOBJS$])
-m4trace:configure.ac:63: -1- _AC_AM_CONFIG_HEADER_HOOK([$ac_file])
-m4trace:configure.ac:63: -1- _AM_OUTPUT_DEPENDENCY_COMMANDS
+m4trace:configure.ac:53: -1- PKG_CHECK_MODULES([LIBWNCK], [libwnck-1.0])
+m4trace:configure.ac:53: -1- m4_pattern_allow([^LIBWNCK_CFLAGS$])
+m4trace:configure.ac:53: -1- m4_pattern_allow([^LIBWNCK_LIBS$])
+m4trace:configure.ac:53: -1- PKG_CHECK_EXISTS([libwnck-1.0], [pkg_cv_[]LIBWNCK_CFLAGS=`$PKG_CONFIG --[]cflags "libwnck-1.0" 2>/dev/null`], [pkg_failed=yes])
+m4trace:configure.ac:53: -1- PKG_CHECK_EXISTS([libwnck-1.0], [pkg_cv_[]LIBWNCK_LIBS=`$PKG_CONFIG --[]libs "libwnck-1.0" 2>/dev/null`], [pkg_failed=yes])
+m4trace:configure.ac:53: -1- _PKG_SHORT_ERRORS_SUPPORTED
+m4trace:configure.ac:54: -1- m4_pattern_allow([^LIBWNCK_LIBS$])
+m4trace:configure.ac:55: -1- m4_pattern_allow([^LIBWNCK_CFLAGS$])
+m4trace:configure.ac:58: -1- m4_pattern_allow([^probotdir$])
+m4trace:configure.ac:67: -1- m4_pattern_allow([^LIB@&t@OBJS$])
+m4trace:configure.ac:67: -1- m4_pattern_allow([^LTLIBOBJS$])
+m4trace:configure.ac:67: -1- _AC_AM_CONFIG_HEADER_HOOK([$ac_file])
+m4trace:configure.ac:67: -1- _AM_OUTPUT_DEPENDENCY_COMMANDS
