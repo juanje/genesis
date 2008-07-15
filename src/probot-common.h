@@ -31,6 +31,7 @@
 #include <unistd.h>
 
 #include <glib.h>
+#include <glib/gstdio.h>
 #include <glib-object.h>
 #include <gtk/gtk.h>
 #include <gdk/gdkx.h>

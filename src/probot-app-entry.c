@@ -164,7 +164,6 @@ static void probot_app_entry_pid_watch_callback (GPid pid, gint status, gpointer
   ProbotAppEntry *entry = PROBOT_APP_ENTRY (data);
   ProbotAppEntryPrivate *priv = PROBOT_APP_ENTRY_GET_PRIVATE (entry);
 
-  g_print ("pid is %d status %d\n", pid, status);
   priv->pid = 0;
 }
 
@@ -254,25 +253,27 @@ gboolean probot_app_entry_extract_info (ProbotAppEntry *entry, GHashTable *hasht
   splash_abs_path = g_build_filename (DEFAULT_SPLASH_SCREEN_PATH,
                                       priv->splash_screen, NULL);
 
+  priv->splashscreen = gtk_window_new (GTK_WINDOW_TOPLEVEL);
+  
+  gtk_window_set_decorated (GTK_WINDOW (priv->splashscreen), FALSE);
+  gtk_window_set_type_hint (GTK_WINDOW (priv->splashscreen), GDK_WINDOW_TYPE_HINT_SPLASHSCREEN);
+  gtk_window_set_position (GTK_WINDOW (priv->splashscreen), GTK_WIN_POS_CENTER_ALWAYS);
+  gtk_window_stick (GTK_WINDOW (priv->splashscreen));
+
   if (g_file_test (splash_abs_path, G_FILE_TEST_IS_REGULAR))
   {
-    g_print ("splash_abs_path %s\n", splash_abs_path);
-    priv->splashscreen = gtk_window_new (GTK_WINDOW_TOPLEVEL);
-    
-    gtk_window_set_decorated (GTK_WINDOW (priv->splashscreen), FALSE);
-    gtk_window_set_type_hint (GTK_WINDOW (priv->splashscreen), GDK_WINDOW_TYPE_HINT_SPLASHSCREEN);
-    gtk_window_set_position (GTK_WINDOW (priv->splashscreen), GTK_WIN_POS_CENTER_ALWAYS);
-    gtk_window_stick (GTK_WINDOW (priv->splashscreen));
-
     image = gtk_image_new_from_file (splash_abs_path);
     gtk_container_add (GTK_CONTAINER (priv->splashscreen), image);
-
-    if (priv->screen)
-    {
-      g_signal_connect (G_OBJECT (priv->screen), "window_opened", G_CALLBACK (probot_app_entry_window_opened), entry);
-      //g_signal_connect (G_OBJECT (priv->screen), "active_window_changed", G_CALLBACK (probot_app_entry_active_window_changed), entry);
-    }
   }
+  else
+  {
+    gchar *banner = g_strdup_printf ("Starting %s...", priv->name);
+    image = gtk_label_new (banner);
+    gtk_container_add (GTK_CONTAINER (priv->splashscreen), image);
+  }
+
+  if (priv->screen)
+    g_signal_connect (G_OBJECT (priv->screen), "window_opened", G_CALLBACK (probot_app_entry_window_opened), entry);
 
   priv->category = NULL;
   categories = g_key_file_get_string_list (key_file,
@@ -333,10 +334,7 @@ void probot_app_entry_start (ProbotAppEntry *entry)
   }
 
   if (priv->splashscreen)
-  {
-    g_print ("show up splash screen\n");
     gtk_widget_show_all (priv->splashscreen);
-  }
 
   if (g_shell_parse_argv (program, &argc, &argv, &error)) 
     g_spawn_async (NULL, argv, NULL, 
