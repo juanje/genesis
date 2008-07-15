@@ -80,7 +80,6 @@ static void probot_app_entry_init (ProbotAppEntry *self)
 {
   ProbotAppEntryPrivate *priv = PROBOT_APP_ENTRY_GET_PRIVATE (self);
   static WnckScreen *screen = NULL;
-  //priv->pid = -1;
   priv->pid = 0;
   priv->splashscreen = NULL;
   if (!screen)
