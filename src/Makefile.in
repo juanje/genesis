@@ -36,33 +36,33 @@ host_triplet = @host@
 subdir = src
 DIST_COMMON = $(noinst_HEADERS) $(pkginclude_HEADERS) \
 	$(srcdir)/Makefile.am $(srcdir)/Makefile.in \
-	$(srcdir)/libprobot.pc.in
+	$(srcdir)/libgenesis.pc.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/config.h
-CONFIG_CLEAN_FILES = libprobot.pc
+CONFIG_CLEAN_FILES = libgenesis.pc
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
 am__vpath_adj = case $$p in \
     $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
     *) f=$$p;; \
   esac;
 am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
-am__installdirs = "$(DESTDIR)$(probotdir)" "$(DESTDIR)$(pkgconfigdir)" \
-	"$(DESTDIR)$(pkgincludedir)"
-probotLTLIBRARIES_INSTALL = $(INSTALL)
-LTLIBRARIES = $(probot_LTLIBRARIES)
+am__installdirs = "$(DESTDIR)$(genesisdir)" \
+	"$(DESTDIR)$(pkgconfigdir)" "$(DESTDIR)$(pkgincludedir)"
+genesisLTLIBRARIES_INSTALL = $(INSTALL)
+LTLIBRARIES = $(genesis_LTLIBRARIES)
 am__DEPENDENCIES_1 =
-libprobot_la_DEPENDENCIES = $(am__DEPENDENCIES_1) \
+libgenesis_la_DEPENDENCIES = $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_1)
-am__objects_1 = probot-marshalers.lo
-am_libprobot_la_OBJECTS = $(am__objects_1) probot-utils.lo \
-	probot-app-entry.lo probot-controller.lo
-libprobot_la_OBJECTS = $(am_libprobot_la_OBJECTS)
+am__objects_1 = genesis-marshalers.lo
+am_libgenesis_la_OBJECTS = $(am__objects_1) genesis-utils.lo \
+	genesis-app-entry.lo genesis-controller.lo
+libgenesis_la_OBJECTS = $(am_libgenesis_la_OBJECTS)
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -75,8 +75,8 @@ CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
-SOURCES = $(libprobot_la_SOURCES)
-DIST_SOURCES = $(libprobot_la_SOURCES)
+SOURCES = $(libgenesis_la_SOURCES)
+DIST_SOURCES = $(libgenesis_la_SOURCES)
 pkgconfigDATA_INSTALL = $(INSTALL_DATA)
 DATA = $(pkgconfig_DATA)
 pkgincludeHEADERS_INSTALL = $(INSTALL_HEADER)
@@ -84,7 +84,7 @@ HEADERS = $(noinst_HEADERS) $(pkginclude_HEADERS)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
-pkgincludedir = $(includedir)/libprobot/libprobot
+pkgincludedir = $(includedir)/libgenesis/libgenesis
 ACLOCAL = @ACLOCAL@
 AMTAR = @AMTAR@
 AR = @AR@
@@ -180,6 +180,7 @@ datarootdir = @datarootdir@
 docdir = @docdir@
 dvidir = @dvidir@
 exec_prefix = @exec_prefix@
+genesisdir = @genesisdir@
 host = @host@
 host_alias = @host_alias@
 host_cpu = @host_cpu@
@@ -198,7 +199,6 @@ mkdir_p = @mkdir_p@
 oldincludedir = @oldincludedir@
 pdfdir = @pdfdir@
 prefix = @prefix@
-probotdir = @probotdir@
 program_transform_name = @program_transform_name@
 psdir = @psdir@
 sbindir = @sbindir@
@@ -217,27 +217,27 @@ INCLUDES = $(GLIB_CFLAGS)     \
 
 AM_LDFLAGS = -module -avoid-version
 pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = libprobot.pc
-pkginclude_HEADERS = probot-utils.h     \
-                     probot-app-entry.h \
-                     probot-controller.h
+pkgconfig_DATA = libgenesis.pc
+pkginclude_HEADERS = genesis-utils.h     \
+                     genesis-app-entry.h \
+                     genesis-controller.h
 
-BUILT_SOURCES = probot-marshalers.c \
-                probot-marshalers.h
+BUILT_SOURCES = genesis-marshalers.c \
+                genesis-marshalers.h
 
-probot_LTLIBRARIES = libprobot.la
-noinst_HEADERS = probot-marshalers.h
-libprobot_la_LIBADD = $(GLIB_LIBS)     \
-                      $(GTK_LIBS)      \
-                      $(GNOMEVFS_LIBS) \
-                      $(GCONF_LIBS)    \
-                      $(LIBXML_LIBS)   \
-                      $(LIBWNCK_LIBS)
+genesis_LTLIBRARIES = libgenesis.la
+noinst_HEADERS = genesis-marshalers.h
+libgenesis_la_LIBADD = $(GLIB_LIBS)     \
+                       $(GTK_LIBS)      \
+                       $(GNOMEVFS_LIBS) \
+                       $(GCONF_LIBS)    \
+                       $(LIBXML_LIBS)   \
+                       $(LIBWNCK_LIBS)
 
-libprobot_la_SOURCES = $(BUILT_SOURCES)    \
-                       probot-utils.c      \
-                       probot-app-entry.c  \
-                       probot-controller.c
+libgenesis_la_SOURCES = $(BUILT_SOURCES)     \
+                        genesis-utils.c      \
+                        genesis-app-entry.c  \
+                        genesis-controller.c
 
 CLEANFILES = $(BUILT_SOURCES) *~ *.la *.o *.so *.lo *.loT *.pc
 all: $(BUILT_SOURCES)
@@ -274,37 +274,37 @@ $(top_srcdir)/configure:  $(am__configure_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(ACLOCAL_M4):  $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
-libprobot.pc: $(top_builddir)/config.status $(srcdir)/libprobot.pc.in
+libgenesis.pc: $(top_builddir)/config.status $(srcdir)/libgenesis.pc.in
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
-install-probotLTLIBRARIES: $(probot_LTLIBRARIES)
+install-genesisLTLIBRARIES: $(genesis_LTLIBRARIES)
 	@$(NORMAL_INSTALL)
-	test -z "$(probotdir)" || $(MKDIR_P) "$(DESTDIR)$(probotdir)"
-	@list='$(probot_LTLIBRARIES)'; for p in $$list; do \
+	test -z "$(genesisdir)" || $(MKDIR_P) "$(DESTDIR)$(genesisdir)"
+	@list='$(genesis_LTLIBRARIES)'; for p in $$list; do \
 	  if test -f $$p; then \
 	    f=$(am__strip_dir) \
-	    echo " $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=install $(probotLTLIBRARIES_INSTALL) $(INSTALL_STRIP_FLAG) '$$p' '$(DESTDIR)$(probotdir)/$$f'"; \
-	    $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=install $(probotLTLIBRARIES_INSTALL) $(INSTALL_STRIP_FLAG) "$$p" "$(DESTDIR)$(probotdir)/$$f"; \
+	    echo " $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=install $(genesisLTLIBRARIES_INSTALL) $(INSTALL_STRIP_FLAG) '$$p' '$(DESTDIR)$(genesisdir)/$$f'"; \
+	    $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=install $(genesisLTLIBRARIES_INSTALL) $(INSTALL_STRIP_FLAG) "$$p" "$(DESTDIR)$(genesisdir)/$$f"; \
 	  else :; fi; \
 	done
 
-uninstall-probotLTLIBRARIES:
+uninstall-genesisLTLIBRARIES:
 	@$(NORMAL_UNINSTALL)
-	@list='$(probot_LTLIBRARIES)'; for p in $$list; do \
+	@list='$(genesis_LTLIBRARIES)'; for p in $$list; do \
 	  p=$(am__strip_dir) \
-	  echo " $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=uninstall rm -f '$(DESTDIR)$(probotdir)/$$p'"; \
-	  $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=uninstall rm -f "$(DESTDIR)$(probotdir)/$$p"; \
+	  echo " $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=uninstall rm -f '$(DESTDIR)$(genesisdir)/$$p'"; \
+	  $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=uninstall rm -f "$(DESTDIR)$(genesisdir)/$$p"; \
 	done
 
-clean-probotLTLIBRARIES:
-	-test -z "$(probot_LTLIBRARIES)" || rm -f $(probot_LTLIBRARIES)
-	@list='$(probot_LTLIBRARIES)'; for p in $$list; do \
+clean-genesisLTLIBRARIES:
+	-test -z "$(genesis_LTLIBRARIES)" || rm -f $(genesis_LTLIBRARIES)
+	@list='$(genesis_LTLIBRARIES)'; for p in $$list; do \
 	  dir="`echo $$p | sed -e 's|/[^/]*$$||'`"; \
 	  test "$$dir" != "$$p" || dir=.; \
 	  echo "rm -f \"$${dir}/so_locations\""; \
 	  rm -f "$${dir}/so_locations"; \
 	done
-libprobot.la: $(libprobot_la_OBJECTS) $(libprobot_la_DEPENDENCIES) 
-	$(LINK) -rpath $(probotdir) $(libprobot_la_OBJECTS) $(libprobot_la_LIBADD) $(LIBS)
+libgenesis.la: $(libgenesis_la_OBJECTS) $(libgenesis_la_DEPENDENCIES) 
+	$(LINK) -rpath $(genesisdir) $(libgenesis_la_OBJECTS) $(libgenesis_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -312,10 +312,10 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/probot-app-entry.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/probot-controller.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/probot-marshalers.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/probot-utils.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/genesis-app-entry.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/genesis-controller.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/genesis-marshalers.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/genesis-utils.Plo@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -456,7 +456,7 @@ check: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) check-am
 all-am: Makefile $(LTLIBRARIES) $(DATA) $(HEADERS)
 installdirs:
-	for dir in "$(DESTDIR)$(probotdir)" "$(DESTDIR)$(pkgconfigdir)" "$(DESTDIR)$(pkgincludedir)"; do \
+	for dir in "$(DESTDIR)$(genesisdir)" "$(DESTDIR)$(pkgconfigdir)" "$(DESTDIR)$(pkgincludedir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: $(BUILT_SOURCES)
@@ -488,7 +488,7 @@ maintainer-clean-generic:
 	-test -z "$(BUILT_SOURCES)" || rm -f $(BUILT_SOURCES)
 clean: clean-am
 
-clean-am: clean-generic clean-libtool clean-probotLTLIBRARIES \
+clean-am: clean-generic clean-genesisLTLIBRARIES clean-libtool \
 	mostlyclean-am
 
 distclean: distclean-am
@@ -507,8 +507,8 @@ info: info-am
 
 info-am:
 
-install-data-am: install-pkgconfigDATA install-pkgincludeHEADERS \
-	install-probotLTLIBRARIES
+install-data-am: install-genesisLTLIBRARIES install-pkgconfigDATA \
+	install-pkgincludeHEADERS
 
 install-dvi: install-dvi-am
 
@@ -544,33 +544,33 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-pkgconfigDATA uninstall-pkgincludeHEADERS \
-	uninstall-probotLTLIBRARIES
+uninstall-am: uninstall-genesisLTLIBRARIES uninstall-pkgconfigDATA \
+	uninstall-pkgincludeHEADERS
 
 .MAKE: install-am install-strip
 
 .PHONY: CTAGS GTAGS all all-am check check-am clean clean-generic \
-	clean-libtool clean-probotLTLIBRARIES ctags distclean \
+	clean-genesisLTLIBRARIES clean-libtool ctags distclean \
 	distclean-compile distclean-generic distclean-libtool \
 	distclean-tags distdir dvi dvi-am html html-am info info-am \
 	install install-am install-data install-data-am install-dvi \
-	install-dvi-am install-exec install-exec-am install-html \
-	install-html-am install-info install-info-am install-man \
-	install-pdf install-pdf-am install-pkgconfigDATA \
-	install-pkgincludeHEADERS install-probotLTLIBRARIES install-ps \
-	install-ps-am install-strip installcheck installcheck-am \
-	installdirs maintainer-clean maintainer-clean-generic \
-	mostlyclean mostlyclean-compile mostlyclean-generic \
-	mostlyclean-libtool pdf pdf-am ps ps-am tags uninstall \
-	uninstall-am uninstall-pkgconfigDATA \
-	uninstall-pkgincludeHEADERS uninstall-probotLTLIBRARIES
+	install-dvi-am install-exec install-exec-am \
+	install-genesisLTLIBRARIES install-html install-html-am \
+	install-info install-info-am install-man install-pdf \
+	install-pdf-am install-pkgconfigDATA install-pkgincludeHEADERS \
+	install-ps install-ps-am install-strip installcheck \
+	installcheck-am installdirs maintainer-clean \
+	maintainer-clean-generic mostlyclean mostlyclean-compile \
+	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
+	tags uninstall uninstall-am uninstall-genesisLTLIBRARIES \
+	uninstall-pkgconfigDATA uninstall-pkgincludeHEADERS
 
 
-probot-marshalers.c:
-	$(LIBTOOL) --mode=execute $(GLIB_GENMARSHAL) probot-marshalers.list --body --header >> probot-marshalers.c
+genesis-marshalers.c:
+	$(LIBTOOL) --mode=execute $(GLIB_GENMARSHAL) genesis-marshalers.list --body --header >> genesis-marshalers.c
 
-probot-marshalers.h:
-	$(LIBTOOL) --mode=execute $(GLIB_GENMARSHAL) probot-marshalers.list --header >> probot-marshalers.h
+genesis-marshalers.h:
+	$(LIBTOOL) --mode=execute $(GLIB_GENMARSHAL) genesis-marshalers.list --header >> genesis-marshalers.h
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

@@ -32,7 +32,7 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-bin_PROGRAMS = probot_test$(EXEEXT)
+bin_PROGRAMS = genesis_test$(EXEEXT)
 subdir = test
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -45,12 +45,12 @@ CONFIG_CLEAN_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
-am_probot_test_OBJECTS = probot_test-main.$(OBJEXT)
-probot_test_OBJECTS = $(am_probot_test_OBJECTS)
-probot_test_LDADD = $(LDADD)
-probot_test_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
+am_genesis_test_OBJECTS = genesis_test-main.$(OBJEXT)
+genesis_test_OBJECTS = $(am_genesis_test_OBJECTS)
+genesis_test_LDADD = $(LDADD)
+genesis_test_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
-	$(probot_test_LDFLAGS) $(LDFLAGS) -o $@
+	$(genesis_test_LDFLAGS) $(LDFLAGS) -o $@
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -63,8 +63,8 @@ CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
-SOURCES = $(probot_test_SOURCES)
-DIST_SOURCES = $(probot_test_SOURCES)
+SOURCES = $(genesis_test_SOURCES)
+DIST_SOURCES = $(genesis_test_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -163,6 +163,7 @@ datarootdir = @datarootdir@
 docdir = @docdir@
 dvidir = @dvidir@
 exec_prefix = @exec_prefix@
+genesisdir = @genesisdir@
 host = @host@
 host_alias = @host_alias@
 host_cpu = @host_cpu@
@@ -181,7 +182,6 @@ mkdir_p = @mkdir_p@
 oldincludedir = @oldincludedir@
 pdfdir = @pdfdir@
 prefix = @prefix@
-probotdir = @probotdir@
 program_transform_name = @program_transform_name@
 psdir = @psdir@
 sbindir = @sbindir@
@@ -191,21 +191,21 @@ sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-probot_test_CPPFLAGS = $(GLIB_CFLAGS)     \
-                       $(GTK_CFLAGS)      \
-                       $(GNOMEVFS_CFLAGS) \
-                       $(GCONF_CFLAGS)    \
-                       $(LIBXML_CFLAGS)   \
-                       $(LIBWNCK_CFLAGS)  \
-                       -I../src/
+genesis_test_CPPFLAGS = $(GLIB_CFLAGS)     \
+                        $(GTK_CFLAGS)      \
+                        $(GNOMEVFS_CFLAGS) \
+                        $(GCONF_CFLAGS)    \
+                        $(LIBXML_CFLAGS)   \
+                        $(LIBWNCK_CFLAGS)  \
+                        -I../src/
 
-probot_test_LDFLAGS = ../src/.libs/libprobot.so \
-                      $(GLIB_LIBS)              \
-                      $(GNOMEVFS_LIBS)          \
-                      $(GTK_LIBS)               \
-                      $(LIBWNCK_LIBS)
+genesis_test_LDFLAGS = ../src/.libs/libgenesis.so \
+                       $(GLIB_LIBS)               \
+                       $(GNOMEVFS_LIBS)           \
+                       $(GTK_LIBS)                \
+                       $(LIBWNCK_LIBS)
 
-probot_test_SOURCES = main.c
+genesis_test_SOURCES = main.c
 all: all-am
 
 .SUFFIXES:
@@ -267,9 +267,9 @@ clean-binPROGRAMS:
 	  echo " rm -f $$p $$f"; \
 	  rm -f $$p $$f ; \
 	done
-probot_test$(EXEEXT): $(probot_test_OBJECTS) $(probot_test_DEPENDENCIES) 
-	@rm -f probot_test$(EXEEXT)
-	$(probot_test_LINK) $(probot_test_OBJECTS) $(probot_test_LDADD) $(LIBS)
+genesis_test$(EXEEXT): $(genesis_test_OBJECTS) $(genesis_test_DEPENDENCIES) 
+	@rm -f genesis_test$(EXEEXT)
+	$(genesis_test_LINK) $(genesis_test_OBJECTS) $(genesis_test_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -277,7 +277,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/probot_test-main.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/genesis_test-main.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -300,19 +300,19 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LTCOMPILE) -c -o $@ $<
 
-probot_test-main.o: main.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(probot_test_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT probot_test-main.o -MD -MP -MF $(DEPDIR)/probot_test-main.Tpo -c -o probot_test-main.o `test -f 'main.c' || echo '$(srcdir)/'`main.c
-@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/probot_test-main.Tpo $(DEPDIR)/probot_test-main.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='main.c' object='probot_test-main.o' libtool=no @AMDEPBACKSLASH@
+genesis_test-main.o: main.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(genesis_test_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT genesis_test-main.o -MD -MP -MF $(DEPDIR)/genesis_test-main.Tpo -c -o genesis_test-main.o `test -f 'main.c' || echo '$(srcdir)/'`main.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/genesis_test-main.Tpo $(DEPDIR)/genesis_test-main.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='main.c' object='genesis_test-main.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(probot_test_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o probot_test-main.o `test -f 'main.c' || echo '$(srcdir)/'`main.c
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(genesis_test_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o genesis_test-main.o `test -f 'main.c' || echo '$(srcdir)/'`main.c
 
-probot_test-main.obj: main.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(probot_test_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT probot_test-main.obj -MD -MP -MF $(DEPDIR)/probot_test-main.Tpo -c -o probot_test-main.obj `if test -f 'main.c'; then $(CYGPATH_W) 'main.c'; else $(CYGPATH_W) '$(srcdir)/main.c'; fi`
-@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/probot_test-main.Tpo $(DEPDIR)/probot_test-main.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='main.c' object='probot_test-main.obj' libtool=no @AMDEPBACKSLASH@
+genesis_test-main.obj: main.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(genesis_test_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT genesis_test-main.obj -MD -MP -MF $(DEPDIR)/genesis_test-main.Tpo -c -o genesis_test-main.obj `if test -f 'main.c'; then $(CYGPATH_W) 'main.c'; else $(CYGPATH_W) '$(srcdir)/main.c'; fi`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/genesis_test-main.Tpo $(DEPDIR)/genesis_test-main.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='main.c' object='genesis_test-main.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(probot_test_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o probot_test-main.obj `if test -f 'main.c'; then $(CYGPATH_W) 'main.c'; else $(CYGPATH_W) '$(srcdir)/main.c'; fi`
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(genesis_test_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o genesis_test-main.obj `if test -f 'main.c'; then $(CYGPATH_W) 'main.c'; else $(CYGPATH_W) '$(srcdir)/main.c'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo

@@ -19,14 +19,18 @@
  *
  */
 
-#ifndef PROBOT_UTILS_H
-#define PROBOT_UTILS_H
+#include "genesis-common.h"
 
-G_BEGIN_DECLS
+gchar* uri_to_path (const gchar *uri)
+{
+  gchar **splitted_uri = NULL;
+ 
+  splitted_uri = g_strsplit (uri, "file://", 2);
+ 
+  return splitted_uri[1];
+}
 
-gchar* uri_to_path (const gchar *uri);
-gchar* path_to_uri (gchar *path);
-
-G_END_DECLS
-
-#endif /* PROBOT_UTILS_H */
+gchar* path_to_uri (gchar *path)
+{
+  return g_strconcat ("file://", path, NULL);
+}

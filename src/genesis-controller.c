@@ -19,7 +19,7 @@
  *
  */
 
-#include "probot-common.h"
+#include "genesis-common.h"
 
 #define DESKTOP_FILE_SUFFIX         ".desktop"
 #define DESKTOP_DIR                 "/usr/share/applications"
@@ -27,10 +27,10 @@
 #define APPLICATIONS_MENU           "/etc/xdg/menus/applications.menu"
 #define PREFERENCES_MENU            "/etc/xdg/menus/preferences.menu"
 
-#define PROBOT_CONTROLLER_GET_PRIVATE(object) \
-        (G_TYPE_INSTANCE_GET_PRIVATE ((object), PROBOT_TYPE_CONTROLLER, ProbotControllerPrivate))
+#define GENESIS_CONTROLLER_GET_PRIVATE(object) \
+        (G_TYPE_INSTANCE_GET_PRIVATE ((object), GENESIS_TYPE_CONTROLLER, GenesisControllerPrivate))
 
-G_DEFINE_TYPE (ProbotController, probot_controller, G_TYPE_OBJECT)
+G_DEFINE_TYPE (GenesisController, genesis_controller, G_TYPE_OBJECT)
 
 enum
 {
@@ -38,7 +38,7 @@ enum
   N_SIGNALS
 };
 
-struct _ProbotControllerPrivate
+struct _GenesisControllerPrivate
 {
   GList *applications;
   GHashTable *categories;
@@ -48,18 +48,18 @@ struct _ProbotControllerPrivate
 
 static void applications_list_updated (GnomeVFSMonitorHandle *handle, const gchar *monitor_uri,
                                        const gchar *info_uri, GnomeVFSMonitorEventType event_type,
-                                       ProbotController *self);
+                                       GenesisController *self);
 
-static GHashTable *probot_controller_parse_menu (ProbotController *self, xmlNode *list)
+static GHashTable *genesis_controller_parse_menu (GenesisController *self, xmlNode *list)
 {
-  ProbotControllerPrivate *priv = PROBOT_CONTROLLER_GET_PRIVATE (self);
+  GenesisControllerPrivate *priv = GENESIS_CONTROLLER_GET_PRIVATE (self);
   xmlNode *node, *iter = NULL;
   gchar *name = NULL, *category = NULL;
 
   for (node = list->children; node != NULL; node = node->next )
   {
     if (!strcmp ((gchar *)node->name, "Menu"))
-      priv->categories = probot_controller_parse_menu (self, node);
+      priv->categories = genesis_controller_parse_menu (self, node);
     else if (!strcmp ((gchar *)node->name, "Name"))
       name = g_strdup ((gchar *)node->last->content);
     else if (!strcmp ((gchar *)node->name, "Include"))
@@ -79,7 +79,7 @@ static GHashTable *probot_controller_parse_menu (ProbotController *self, xmlNode
   return priv->categories;
 }
 
-static GHashTable *probot_controller_append_categories (ProbotController *self, const gchar *menu)
+static GHashTable *genesis_controller_append_categories (GenesisController *self, const gchar *menu)
 {
   xmlDoc *doc = NULL;
   xmlNode *root = NULL;
@@ -90,12 +90,12 @@ static GHashTable *probot_controller_append_categories (ProbotController *self, 
   if (NULL == root)
     return NULL;
 
-  return probot_controller_parse_menu (self, root);
+  return genesis_controller_parse_menu (self, root);
 }
 
-static GList *probot_controller_append_applications (ProbotController *self)
+static GList *genesis_controller_append_applications (GenesisController *self)
 {
-  ProbotControllerPrivate *priv = PROBOT_CONTROLLER_GET_PRIVATE (self);
+  GenesisControllerPrivate *priv = GENESIS_CONTROLLER_GET_PRIVATE (self);
   DIR *dir_handle = NULL;
   struct dirent *d = NULL;
   struct stat buf;
@@ -111,10 +111,10 @@ static GList *probot_controller_append_applications (ProbotController *self)
         S_ISREG (buf.st_mode) &&
         g_str_has_suffix (desktop_path, DESKTOP_FILE_SUFFIX)) 
     {
-      ProbotAppEntry *entry = g_object_new (PROBOT_TYPE_APP_ENTRY, 
-                                            "desktop_entry", 
-                                            desktop_path, NULL);
-      if (probot_app_entry_extract_info (entry, priv->categories))
+      GenesisAppEntry *entry = g_object_new (GENESIS_TYPE_APP_ENTRY, 
+                                             "desktop_entry", 
+                                             desktop_path, NULL);
+      if (genesis_app_entry_extract_info (entry, priv->categories))
         priv->applications = g_list_append (priv->applications, entry);
     }
   }
@@ -125,10 +125,10 @@ static GList *probot_controller_append_applications (ProbotController *self)
   return priv->applications;
 }
 
-static void probot_controller_finalize (GObject *object)
+static void genesis_controller_finalize (GObject *object)
 {
-  ProbotController *self = PROBOT_CONTROLLER (object);
-  ProbotControllerPrivate *priv = PROBOT_CONTROLLER_GET_PRIVATE (self);
+  GenesisController *self = GENESIS_CONTROLLER (object);
+  GenesisControllerPrivate *priv = GENESIS_CONTROLLER_GET_PRIVATE (self);
 
   if (priv->monitor)
     gnome_vfs_monitor_cancel (priv->monitor);
@@ -140,13 +140,13 @@ static void probot_controller_finalize (GObject *object)
     g_free (priv->applications);
 }
 
-static void probot_controller_class_init (ProbotControllerClass *klass)
+static void genesis_controller_class_init (GenesisControllerClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
-  g_type_class_add_private (klass, sizeof (ProbotControllerPrivate));
+  g_type_class_add_private (klass, sizeof (GenesisControllerPrivate));
 
-  object_class->finalize = probot_controller_finalize;
+  object_class->finalize = genesis_controller_finalize;
 
   g_signal_new ("app-entry-updated",
                 G_OBJECT_CLASS_TYPE(object_class),
@@ -158,18 +158,18 @@ static void probot_controller_class_init (ProbotControllerClass *klass)
                 G_TYPE_UINT, G_TYPE_POINTER);
 }
 
-static void probot_controller_init (ProbotController *self)
+static void genesis_controller_init (GenesisController *self)
 {
-  ProbotControllerPrivate *priv = PROBOT_CONTROLLER_GET_PRIVATE (self);
+  GenesisControllerPrivate *priv = GENESIS_CONTROLLER_GET_PRIVATE (self);
 
   gnome_vfs_init ();
 
   priv->client = gconf_client_get_default ();
   priv->categories = g_hash_table_new (g_str_hash, g_str_equal); 
-  priv->categories = probot_controller_append_categories (self, APPLICATIONS_MENU);
-  priv->categories = probot_controller_append_categories (self, PREFERENCES_MENU);
+  priv->categories = genesis_controller_append_categories (self, APPLICATIONS_MENU);
+  priv->categories = genesis_controller_append_categories (self, PREFERENCES_MENU);
 
-  priv->applications = probot_controller_append_applications (self);
+  priv->applications = genesis_controller_append_applications (self);
 
   gnome_vfs_monitor_add  (&priv->monitor,
                           DESKTOP_DIR,
@@ -180,10 +180,10 @@ static void probot_controller_init (ProbotController *self)
 
 static void applications_list_updated (GnomeVFSMonitorHandle *handle, const gchar *monitor_uri,
                                        const gchar *info_uri, GnomeVFSMonitorEventType event_type,
-                                       ProbotController *self)
+                                       GenesisController *self)
 {
-  ProbotControllerPrivate *priv = PROBOT_CONTROLLER_GET_PRIVATE (self);
-  ProbotAppEntry *entry = NULL;
+  GenesisControllerPrivate *priv = GENESIS_CONTROLLER_GET_PRIVATE (self);
+  GenesisAppEntry *entry = NULL;
   gchar *desktop_entry = NULL;
   gchar *nth_desktop_entry = NULL;
   guint n = 0;
@@ -198,12 +198,12 @@ static void applications_list_updated (GnomeVFSMonitorHandle *handle, const gcha
     case GNOME_VFS_MONITOR_EVENT_DELETED:
       do
       {
-        entry = probot_controller_get_nth_entry (self, n);
+        entry = genesis_controller_get_nth_entry (self, n);
         g_object_get (G_OBJECT(entry), "desktop_entry", &nth_desktop_entry, NULL);
 
         if (!g_ascii_strcasecmp (nth_desktop_entry, desktop_entry))
         {
-          probot_controller_remove_entry (self, entry);
+          genesis_controller_remove_entry (self, entry);
           g_free (nth_desktop_entry);
 
           if (GNOME_VFS_MONITOR_EVENT_DELETED == event_type)
@@ -221,9 +221,9 @@ static void applications_list_updated (GnomeVFSMonitorHandle *handle, const gcha
       if (GNOME_VFS_MONITOR_EVENT_DELETED == event_type)
         break;
     case GNOME_VFS_MONITOR_EVENT_CREATED:
-      entry = g_object_new (PROBOT_TYPE_APP_ENTRY, "desktop_entry", desktop_entry, NULL);
+      entry = g_object_new (GENESIS_TYPE_APP_ENTRY, "desktop_entry", desktop_entry, NULL);
 
-      if (probot_app_entry_extract_info (entry, priv->categories))
+      if (genesis_app_entry_extract_info (entry, priv->categories))
         priv->applications = g_list_append (priv->applications, entry);
  
       g_signal_emit_by_name (self, "app-entry-updated", event_type, desktop_entry);
@@ -239,44 +239,44 @@ Exit:
 
 /* Public Functions */
 
-ProbotController *probot_controller_get_singleton (void)
+GenesisController *genesis_controller_get_singleton (void)
 {
-  static ProbotController *controller = NULL;
+  static GenesisController *controller = NULL;
 
   if (!controller)
-    controller = g_object_new (PROBOT_TYPE_CONTROLLER, NULL);
+    controller = g_object_new (GENESIS_TYPE_CONTROLLER, NULL);
 
   return controller;
 }
 
-gboolean probot_controller_start_app_from_path (ProbotController *controller, gchar *path)
+gboolean genesis_controller_start_app_from_path (GenesisController *controller, gchar *path)
 {
-  ProbotControllerPrivate *priv = PROBOT_CONTROLLER_GET_PRIVATE (controller);
-  ProbotAppEntry *entry = g_object_new (PROBOT_TYPE_APP_ENTRY, NULL);
+  GenesisControllerPrivate *priv = GENESIS_CONTROLLER_GET_PRIVATE (controller);
+  GenesisAppEntry *entry = g_object_new (GENESIS_TYPE_APP_ENTRY, NULL);
 
-  probot_app_entry_set_exec (entry, path);
-  probot_app_entry_set_name (entry, path);
+  genesis_app_entry_set_exec (entry, path);
+  genesis_app_entry_set_name (entry, path);
 
   priv->applications = g_list_append (priv->applications, entry);
 
-  probot_app_entry_start (entry);
+  genesis_app_entry_start (entry);
   return TRUE;
 }
 
-gboolean probot_controller_start_app_from_name (ProbotController *controller, gchar* name)
+gboolean genesis_controller_start_app_from_name (GenesisController *controller, gchar* name)
 {
-  ProbotControllerPrivate *priv = PROBOT_CONTROLLER_GET_PRIVATE (controller);
-  ProbotAppEntry *entry = NULL;
+  GenesisControllerPrivate *priv = GENESIS_CONTROLLER_GET_PRIVATE (controller);
+  GenesisAppEntry *entry = NULL;
 
   guint len = g_list_length (priv->applications);
   gboolean foundApp = FALSE;
 
   for (int i = 0; i < len; i++) 
   {
-    entry = PROBOT_APP_ENTRY (g_list_nth_data (priv->applications, i));
+    entry = GENESIS_APP_ENTRY (g_list_nth_data (priv->applications, i));
 
     // compare name passed in with app name in list
-    if (!g_ascii_strcasecmp (probot_app_entry_get_name (entry), name)) 
+    if (!g_ascii_strcasecmp (genesis_app_entry_get_name (entry), name)) 
     {
       foundApp = TRUE;
       break;
@@ -289,43 +289,43 @@ gboolean probot_controller_start_app_from_name (ProbotController *controller, gc
     return FALSE;
   }
 
-  probot_app_entry_start (entry);
+  genesis_app_entry_start (entry);
   return TRUE;
 }
 
-ProbotAppEntry *probot_controller_get_nth_entry (ProbotController *controller, guint n)
+GenesisAppEntry *genesis_controller_get_nth_entry (GenesisController *controller, guint n)
 {
-  ProbotControllerPrivate *priv = PROBOT_CONTROLLER_GET_PRIVATE (controller);
-  ProbotAppEntry *entry = NULL;  
+  GenesisControllerPrivate *priv = GENESIS_CONTROLLER_GET_PRIVATE (controller);
+  GenesisAppEntry *entry = NULL;  
 
   if (priv->applications)
-    entry = PROBOT_APP_ENTRY (g_list_nth_data (priv->applications, n));
+    entry = GENESIS_APP_ENTRY (g_list_nth_data (priv->applications, n));
 
   return entry;
 }
 
-ProbotAppEntry *probot_controller_get_entry_by_name (ProbotController *controller, gchar* name)
+GenesisAppEntry *genesis_controller_get_entry_by_name (GenesisController *controller, gchar* name)
 {
-  ProbotControllerPrivate *priv = PROBOT_CONTROLLER_GET_PRIVATE (controller);
-  ProbotAppEntry *entry = NULL;
+  GenesisControllerPrivate *priv = GENESIS_CONTROLLER_GET_PRIVATE (controller);
+  GenesisAppEntry *entry = NULL;
 
   guint len = g_list_length (priv->applications);
 
   for (int i = 0; i < len; i++)
   {
-    entry = PROBOT_APP_ENTRY (g_list_nth_data (priv->applications, i));
+    entry = GENESIS_APP_ENTRY (g_list_nth_data (priv->applications, i));
 
     // compare name passed in with app name in list
-    if (!g_ascii_strcasecmp (probot_app_entry_get_name (entry), name))
+    if (!g_ascii_strcasecmp (genesis_app_entry_get_name (entry), name))
       return entry;
   }
 
   return entry;
 }
 
-void probot_controller_remove_entry (ProbotController *controller, ProbotAppEntry *entry)
+void genesis_controller_remove_entry (GenesisController *controller, GenesisAppEntry *entry)
 {
-  ProbotControllerPrivate *priv = PROBOT_CONTROLLER_GET_PRIVATE (controller);
+  GenesisControllerPrivate *priv = GENESIS_CONTROLLER_GET_PRIVATE (controller);
 
   if (priv->applications)
     priv->applications = g_list_remove (priv->applications, entry);

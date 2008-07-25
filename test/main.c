@@ -20,7 +20,7 @@
  */
 
 #include "gtk/gtk.h"
-#include "probot-common.h"
+#include "genesis-common.h"
 
 static void selection_changed_callback (GtkTreeSelection *selection, gpointer user_data)
 {
@@ -31,22 +31,22 @@ static void selection_changed_callback (GtkTreeSelection *selection, gpointer us
   GtkTreeIter iter;
   gchar *entry_name = NULL;
   gchar *entry_info = NULL;
-  ProbotController *controller = probot_controller_get_singleton ();
-  ProbotAppEntry *entry = NULL;
+  GenesisController *controller = genesis_controller_get_singleton ();
+  GenesisAppEntry *entry = NULL;
 
   if (gtk_tree_selection_get_selected (selection, &model, &iter))
   {
     treeview = GTK_WIDGET (gtk_tree_selection_get_tree_view (selection));
     gtk_tree_model_get (model, &iter, 0, &entry_name, -1);
 
-    entry = probot_controller_get_entry_by_name (controller, entry_name);
+    entry = genesis_controller_get_entry_by_name (controller, entry_name);
     if (entry)
       entry_info = g_strdup_printf ("-=-=-=-=-=-=-=-\nAppEntry Information \nname : %s \nicon : %s \nexec : %s \nshowup : %d \ncategory : %s \n-=-=-=-=-=-=-=-\n",
-                                    probot_app_entry_get_name (entry),
-                                    probot_app_entry_get_icon (entry),
-                                    probot_app_entry_get_exec (entry),
-                                    probot_app_entry_is_showup (entry),
-                                    probot_app_entry_get_category (entry));
+                                    genesis_app_entry_get_name (entry),
+                                    genesis_app_entry_get_icon (entry),
+                                    genesis_app_entry_get_exec (entry),
+                                    genesis_app_entry_is_showup (entry),
+                                    genesis_app_entry_get_category (entry));
     else
       entry_info = g_strdup ("Invalid desktop entry!");
 
@@ -64,17 +64,17 @@ static void start_button_clicked_callback (GtkButton *button, gpointer user_data
   GtkTreeModel *model;
   GtkTreeIter iter;
   gchar *entry_name = NULL;
-  ProbotController *controller = probot_controller_get_singleton ();
+  GenesisController *controller = genesis_controller_get_singleton ();
 
   selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (treeview));
   if (gtk_tree_selection_get_selected (selection, &model, &iter))
   {
     gtk_tree_model_get (model, &iter, 0, &entry_name, -1);
-    probot_controller_start_app_from_name (controller, entry_name);
+    genesis_controller_start_app_from_name (controller, entry_name);
   }
 }
 
-static void app_entry_updated_callback (ProbotController *controller, guint event_type, gchar *info_path, gpointer user_data)
+static void app_entry_updated_callback (GenesisController *controller, guint event_type, gchar *info_path, gpointer user_data)
 {
   g_print ("app_entry_updated_callback: entered\n");
   if (info_path)
@@ -91,7 +91,7 @@ static void tree_view_append_entry (GtkTreeModel *model, gchar *entry_name)
   gtk_list_store_set (GTK_LIST_STORE (model), &iter, 0, entry_name, -1);
 }
 
-static void home_window_construct (ProbotController *controller)
+static void home_window_construct (GenesisController *controller)
 {
   GtkWidget *window;
   GtkWidget *hbox, *vbox;
@@ -99,7 +99,7 @@ static void home_window_construct (ProbotController *controller)
   GtkTreeModel *model;
   GtkTreeSelection *selection;
   GtkWidget *textview, *button;
-  ProbotAppEntry *entry = NULL;
+  GenesisAppEntry *entry = NULL;
   guint n = 0;
 
   window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
@@ -132,10 +132,10 @@ static void home_window_construct (ProbotController *controller)
 
   do
   {
-    entry = probot_controller_get_nth_entry (controller, n);
+    entry = genesis_controller_get_nth_entry (controller, n);
     if (entry)
     {
-      gchar *entry_name = probot_app_entry_get_name (entry);
+      gchar *entry_name = genesis_app_entry_get_name (entry);
 
       tree_view_append_entry (model, entry_name);
       n++;
@@ -154,11 +154,11 @@ static void home_window_construct (ProbotController *controller)
 
 int main(int argc, char *argv[])
 {
-  ProbotController *controller = NULL;
+  GenesisController *controller = NULL;
 
   gtk_init (&argc, &argv);
 
-  controller = probot_controller_get_singleton ();
+  controller = genesis_controller_get_singleton ();
 
   if (!controller)
   {

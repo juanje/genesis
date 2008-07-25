@@ -1,4 +1,4 @@
-AC_INIT(probot, 0.0.1)
+AC_INIT(genesis, 0.0.1)
 
 AM_INIT_AUTOMAKE
 
@@ -54,13 +54,13 @@ PKG_CHECK_MODULES(LIBWNCK, libwnck-1.0)
 AC_SUBST(LIBWNCK_LIBS)
 AC_SUBST(LIBWNCK_CFLAGS)
 
-probotdir=${libdir}
-AC_SUBST(probotdir)
+genesisdir=${libdir}
+AC_SUBST(genesisdir)
 
 AC_CONFIG_FILES([
 Makefile
 src/Makefile
-src/libprobot.pc
+src/libgenesis.pc
 test/Makefile
 ])
 

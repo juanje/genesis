@@ -19,33 +19,14 @@
  *
  */
 
-#ifndef PROBOT_COMMON_H
-#define PROBOT_COMMON_H
+#ifndef GENESIS_UTILS_H
+#define GENESIS_UTILS_H
 
-#include <dirent.h>
-#include <string.h>
-#include <errno.h>
-#include <sys/resource.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h>
+G_BEGIN_DECLS
 
-#include <glib.h>
-#include <glib/gstdio.h>
-#include <glib-object.h>
-#include <gtk/gtk.h>
-#include <gdk/gdkx.h>
-#include <libgnomevfs/gnome-vfs.h>
-#include <gconf/gconf-client.h>
-#include <libxml/parser.h>
-#define WNCK_I_KNOW_THIS_IS_UNSTABLE
-#include <libwnck/libwnck.h>
+gchar* uri_to_path (const gchar *uri);
+gchar* path_to_uri (gchar *path);
 
-#include "config.h"
+G_END_DECLS
 
-#include "probot-marshalers.h"
-#include "probot-app-entry.h"
-#include "probot-controller.h"
-#include "probot-utils.h"
-
-#endif /* PROBOT_COMMON_H */
+#endif /* GENESIS_UTILS_H */

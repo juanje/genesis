@@ -1,11 +1,11 @@
-Source: probot
+Source: genesis
 Section: libraries
 Priority: extra
 Maintainer: Li, Horace <horace.li@intel.com>
 Build-Depends: debhelper, automake, pkg-config, libtool, libglib2.0-dev, libxml2-dev, libgconf2-dev
 Standards-Version: 3.7.2
 
-Package: libprobot
+Package: libgenesis
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends},
 Description: Program launcher & manager

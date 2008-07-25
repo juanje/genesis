@@ -19,18 +19,33 @@
  *
  */
 
-#include "probot-common.h"
+#ifndef GENESIS_COMMON_H
+#define GENESIS_COMMON_H
 
-gchar* uri_to_path (const gchar *uri)
-{
-  gchar **splitted_uri = NULL;
- 
-  splitted_uri = g_strsplit (uri, "file://", 2);
- 
-  return splitted_uri[1];
-}
+#include <dirent.h>
+#include <string.h>
+#include <errno.h>
+#include <sys/resource.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
 
-gchar* path_to_uri (gchar *path)
-{
-  return g_strconcat ("file://", path, NULL);
-}
+#include <glib.h>
+#include <glib/gstdio.h>
+#include <glib-object.h>
+#include <gtk/gtk.h>
+#include <gdk/gdkx.h>
+#include <libgnomevfs/gnome-vfs.h>
+#include <gconf/gconf-client.h>
+#include <libxml/parser.h>
+#define WNCK_I_KNOW_THIS_IS_UNSTABLE
+#include <libwnck/libwnck.h>
+
+#include "config.h"
+
+#include "genesis-marshalers.h"
+#include "genesis-app-entry.h"
+#include "genesis-controller.h"
+#include "genesis-utils.h"
+
+#endif /* GENESIS_COMMON_H */

@@ -19,12 +19,12 @@
  *
  */
 
-#include "probot-common.h"
+#include "genesis-common.h"
 
-#define PROBOT_APP_ENTRY_GET_PRIVATE(object) \
-        (G_TYPE_INSTANCE_GET_PRIVATE ((object), PROBOT_TYPE_APP_ENTRY, ProbotAppEntryPrivate))
+#define GENESIS_APP_ENTRY_GET_PRIVATE(object) \
+        (G_TYPE_INSTANCE_GET_PRIVATE ((object), GENESIS_TYPE_APP_ENTRY, GenesisAppEntryPrivate))
 
-G_DEFINE_TYPE (ProbotAppEntry, probot_app_entry, G_TYPE_OBJECT)
+G_DEFINE_TYPE (GenesisAppEntry, genesis_app_entry, G_TYPE_OBJECT)
 
 enum
 {
@@ -32,7 +32,7 @@ enum
   PROP_DESKTOP_ENTRY
 };
 
-struct _ProbotAppEntryPrivate
+struct _GenesisAppEntryPrivate
 {
   gchar *filename;
 
@@ -51,20 +51,20 @@ struct _ProbotAppEntryPrivate
   GPid pid;
 };
 
-static void probot_app_entry_get_property (GObject *object, guint prop_id,
-                                           GValue *value, GParamSpec *pspec);
+static void genesis_app_entry_get_property (GObject *object, guint prop_id,
+                                            GValue *value, GParamSpec *pspec);
 
-static void probot_app_entry_set_property (GObject *object, guint prop_id,
-                                           const GValue *value, GParamSpec *pspec);
+static void genesis_app_entry_set_property (GObject *object, guint prop_id,
+                                            const GValue *value, GParamSpec *pspec);
 
-static void probot_app_entry_class_init (ProbotAppEntryClass *klass)
+static void genesis_app_entry_class_init (GenesisAppEntryClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
-  g_type_class_add_private (klass, sizeof (ProbotAppEntryPrivate));
+  g_type_class_add_private (klass, sizeof (GenesisAppEntryPrivate));
 
-  object_class->set_property = probot_app_entry_set_property;
-  object_class->get_property = probot_app_entry_get_property;
+  object_class->set_property = genesis_app_entry_set_property;
+  object_class->get_property = genesis_app_entry_get_property;
 
   g_object_class_install_property (object_class,
                                    PROP_DESKTOP_ENTRY,
@@ -76,9 +76,9 @@ static void probot_app_entry_class_init (ProbotAppEntryClass *klass)
                                            G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 }
 
-static void probot_app_entry_init (ProbotAppEntry *self)
+static void genesis_app_entry_init (GenesisAppEntry *self)
 {
-  ProbotAppEntryPrivate *priv = PROBOT_APP_ENTRY_GET_PRIVATE (self);
+  GenesisAppEntryPrivate *priv = GENESIS_APP_ENTRY_GET_PRIVATE (self);
   static WnckScreen *screen = NULL;
   priv->pid = 0;
   priv->splashscreen = NULL;
@@ -88,11 +88,11 @@ static void probot_app_entry_init (ProbotAppEntry *self)
   priv->screen = screen;
 }
 
-static void probot_app_entry_get_property (GObject *object, guint prop_id,
-                                           GValue *value, GParamSpec *pspec)
+static void genesis_app_entry_get_property (GObject *object, guint prop_id,
+                                            GValue *value, GParamSpec *pspec)
 {
-  ProbotAppEntry *self = PROBOT_APP_ENTRY (object);
-  ProbotAppEntryPrivate *priv = PROBOT_APP_ENTRY_GET_PRIVATE (self);
+  GenesisAppEntry *self = GENESIS_APP_ENTRY (object);
+  GenesisAppEntryPrivate *priv = GENESIS_APP_ENTRY_GET_PRIVATE (self);
 
   switch (prop_id)
   {
@@ -105,11 +105,11 @@ static void probot_app_entry_get_property (GObject *object, guint prop_id,
   }
 }
 
-static void probot_app_entry_set_property (GObject *object, guint prop_id,
-                                           const GValue *value, GParamSpec *pspec)
+static void genesis_app_entry_set_property (GObject *object, guint prop_id,
+                                            const GValue *value, GParamSpec *pspec)
 {
-  ProbotAppEntry *self = PROBOT_APP_ENTRY (object);
-  ProbotAppEntryPrivate *priv = PROBOT_APP_ENTRY_GET_PRIVATE (self);
+  GenesisAppEntry *self = GENESIS_APP_ENTRY (object);
+  GenesisAppEntryPrivate *priv = GENESIS_APP_ENTRY_GET_PRIVATE (self);
 
   switch (prop_id)
   {
@@ -122,7 +122,7 @@ static void probot_app_entry_set_property (GObject *object, guint prop_id,
   }
 }
 
-static gchar *probot_app_entry_get_localized_name (GKeyFile *key_file)
+static gchar *genesis_app_entry_get_localized_name (GKeyFile *key_file)
 {
   gchar *lang, *namefield, *name = NULL;
   const gchar *mylang;
@@ -158,17 +158,17 @@ static gchar *probot_app_entry_get_localized_name (GKeyFile *key_file)
   return name;
 }
 
-static void probot_app_entry_pid_watch_callback (GPid pid, gint status, gpointer data)
+static void genesis_app_entry_pid_watch_callback (GPid pid, gint status, gpointer data)
 {
-  ProbotAppEntry *entry = PROBOT_APP_ENTRY (data);
-  ProbotAppEntryPrivate *priv = PROBOT_APP_ENTRY_GET_PRIVATE (entry);
+  GenesisAppEntry *entry = GENESIS_APP_ENTRY (data);
+  GenesisAppEntryPrivate *priv = GENESIS_APP_ENTRY_GET_PRIVATE (entry);
 
   priv->pid = 0;
 }
 
-static void probot_app_entry_window_opened (WnckScreen *screen, WnckWindow *window, ProbotAppEntry *entry)
+static void genesis_app_entry_window_opened (WnckScreen *screen, WnckWindow *window, GenesisAppEntry *entry)
 {
-  ProbotAppEntryPrivate *priv = PROBOT_APP_ENTRY_GET_PRIVATE (entry);
+  GenesisAppEntryPrivate *priv = GENESIS_APP_ENTRY_GET_PRIVATE (entry);
   WnckWindowType type;
   int pid;
 
@@ -181,9 +181,9 @@ static void probot_app_entry_window_opened (WnckScreen *screen, WnckWindow *wind
 }
 
 /* Public Functions */
-gboolean probot_app_entry_extract_info (ProbotAppEntry *entry, GHashTable *hashtable)
+gboolean genesis_app_entry_extract_info (GenesisAppEntry *entry, GHashTable *hashtable)
 {
-  ProbotAppEntryPrivate *priv = PROBOT_APP_ENTRY_GET_PRIVATE (entry);
+  GenesisAppEntryPrivate *priv = GENESIS_APP_ENTRY_GET_PRIVATE (entry);
   GKeyFile *key_file = NULL;
   gchar **categories = NULL, **onlyshowin = NULL;
   gchar *splash_abs_path = NULL;
@@ -222,7 +222,7 @@ gboolean probot_app_entry_extract_info (ProbotAppEntry *entry, GHashTable *hasht
     g_strfreev (onlyshowin);
   }
 
-  priv->name = probot_app_entry_get_localized_name (key_file);
+  priv->name = genesis_app_entry_get_localized_name (key_file);
   priv->icon = g_key_file_get_string (key_file,
                                       G_KEY_FILE_DESKTOP_GROUP,
                                       G_KEY_FILE_DESKTOP_KEY_ICON,
@@ -272,7 +272,7 @@ gboolean probot_app_entry_extract_info (ProbotAppEntry *entry, GHashTable *hasht
   }
 
   if (priv->screen)
-    g_signal_connect (G_OBJECT (priv->screen), "window_opened", G_CALLBACK (probot_app_entry_window_opened), entry);
+    g_signal_connect (G_OBJECT (priv->screen), "window_opened", G_CALLBACK (genesis_app_entry_window_opened), entry);
 
   priv->category = NULL;
   categories = g_key_file_get_string_list (key_file,
@@ -298,9 +298,9 @@ gboolean probot_app_entry_extract_info (ProbotAppEntry *entry, GHashTable *hasht
   return TRUE;
 }
 
-void probot_app_entry_start (ProbotAppEntry *entry)
+void genesis_app_entry_start (GenesisAppEntry *entry)
 {
-  ProbotAppEntryPrivate *priv = PROBOT_APP_ENTRY_GET_PRIVATE (entry);
+  GenesisAppEntryPrivate *priv = GENESIS_APP_ENTRY_GET_PRIVATE (entry);
   gchar *program = NULL;
   GError *error = NULL;
   gint argc;
@@ -359,7 +359,7 @@ void probot_app_entry_start (ProbotAppEntry *entry)
     if (!errno && priority < 0)
       setpriority (PRIO_PROCESS, priv->pid, 0);
 
-    g_child_watch_add (priv->pid, probot_app_entry_pid_watch_callback, entry);
+    g_child_watch_add (priv->pid, genesis_app_entry_pid_watch_callback, entry);
 
     /* Unprotect from OOM */
     oom_filename = g_strdup_printf ("/proc/%i/oom_adj", priv->pid);
@@ -374,51 +374,51 @@ void probot_app_entry_start (ProbotAppEntry *entry)
   }
 }
 
-void probot_app_entry_set_exec (ProbotAppEntry *entry, const gchar *name)
+void genesis_app_entry_set_exec (GenesisAppEntry *entry, const gchar *name)
 {
-  ProbotAppEntryPrivate *priv = PROBOT_APP_ENTRY_GET_PRIVATE (entry);
+  GenesisAppEntryPrivate *priv = GENESIS_APP_ENTRY_GET_PRIVATE (entry);
 
   priv->exec = g_strdup (name);
 }
 
-void probot_app_entry_set_name (ProbotAppEntry *entry, const gchar *name)
+void genesis_app_entry_set_name (GenesisAppEntry *entry, const gchar *name)
 {
-  ProbotAppEntryPrivate *priv = PROBOT_APP_ENTRY_GET_PRIVATE (entry);
+  GenesisAppEntryPrivate *priv = GENESIS_APP_ENTRY_GET_PRIVATE (entry);
 
   priv->name = g_strdup (name);
 }
 
-gchar *probot_app_entry_get_name (ProbotAppEntry *entry)
+gchar *genesis_app_entry_get_name (GenesisAppEntry *entry)
 {
-  ProbotAppEntryPrivate *priv = PROBOT_APP_ENTRY_GET_PRIVATE (entry);
+  GenesisAppEntryPrivate *priv = GENESIS_APP_ENTRY_GET_PRIVATE (entry);
 
   return priv->name;
 }
 
-gchar *probot_app_entry_get_icon (ProbotAppEntry *entry)
+gchar *genesis_app_entry_get_icon (GenesisAppEntry *entry)
 {
-  ProbotAppEntryPrivate *priv = PROBOT_APP_ENTRY_GET_PRIVATE (entry);
+  GenesisAppEntryPrivate *priv = GENESIS_APP_ENTRY_GET_PRIVATE (entry);
 
   return priv->icon;
 }
 
-gchar *probot_app_entry_get_exec (ProbotAppEntry *entry)
+gchar *genesis_app_entry_get_exec (GenesisAppEntry *entry)
 {
-  ProbotAppEntryPrivate *priv = PROBOT_APP_ENTRY_GET_PRIVATE (entry);
+  GenesisAppEntryPrivate *priv = GENESIS_APP_ENTRY_GET_PRIVATE (entry);
 
   return priv->exec;
 }
 
-gboolean probot_app_entry_is_showup (ProbotAppEntry *entry)
+gboolean genesis_app_entry_is_showup (GenesisAppEntry *entry)
 {
-  ProbotAppEntryPrivate *priv = PROBOT_APP_ENTRY_GET_PRIVATE (entry);
+  GenesisAppEntryPrivate *priv = GENESIS_APP_ENTRY_GET_PRIVATE (entry);
 
   return priv->showup;
 }
 
-gchar *probot_app_entry_get_category (ProbotAppEntry *entry)
+gchar *genesis_app_entry_get_category (GenesisAppEntry *entry)
 {
-  ProbotAppEntryPrivate *priv = PROBOT_APP_ENTRY_GET_PRIVATE (entry);
+  GenesisAppEntryPrivate *priv = GENESIS_APP_ENTRY_GET_PRIVATE (entry);
 
   return priv->category;
 }
