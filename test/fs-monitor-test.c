@@ -19,37 +19,33 @@
  *
  */
 
-#ifndef GENESIS_COMMON_H
-#define GENESIS_COMMON_H
+#include "gtk/gtk.h"
+#include "genesis-common.h"
 
-#include <dirent.h>
-#include <string.h>
-#include <errno.h>
-#include <sys/resource.h>
-#include <sys/stat.h>
-#include <sys/inotify.h>
-#include <sys/select.h>
-#include <sys/ioctl.h>
-#include <fcntl.h>
-#include <unistd.h>
+static gboolean monitor_callback (GenesisFSMonitor *monitor, const gchar *path, 
+                                  GenesisFSMonitorEventType type, gpointer data)
+{
+  g_print ("event %d happened to %s\n", type, path);
+  return TRUE;
+}
 
-#include <glib.h>
-#include <glib/gstdio.h>
-#include <glib-object.h>
-#include <gtk/gtk.h>
-#include <gdk/gdkx.h>
-#include <libgnomevfs/gnome-vfs.h>
-#include <gconf/gconf-client.h>
-#include <libxml/parser.h>
-#define WNCK_I_KNOW_THIS_IS_UNSTABLE
-#include <libwnck/libwnck.h>
+int main(int argc, char *argv[])
+{
+  GenesisFSMonitor *monitor = NULL;
 
-#include "config.h"
+  gtk_init (&argc, &argv);
 
-#include "genesis-marshalers.h"
-#include "genesis-app-entry.h"
-#include "genesis-fs-monitor.h"
-#include "genesis-controller.h"
-#include "genesis-utils.h"
+  monitor = genesis_fs_monitor_get_singleton ();
 
-#endif /* GENESIS_COMMON_H */
+  if (!monitor)
+  {
+    g_warning ("Failed to get probot monitor singleton, returned.\n");
+    return -1;
+  }
+
+  genesis_fs_monitor_add (monitor, "/usr/share/applications/", IN_ALL_EVENTS, monitor_callback, NULL);
+
+  gtk_main ();
+
+  return 0;
+}

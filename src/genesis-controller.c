@@ -43,12 +43,69 @@ struct _GenesisControllerPrivate
   GList *applications;
   GHashTable *categories;
   GConfClient *client;
-  GnomeVFSMonitorHandle  *monitor;
+  GenesisFSMonitor  *monitor;
 };
 
-static void applications_list_updated (GnomeVFSMonitorHandle *handle, const gchar *monitor_uri,
-                                       const gchar *info_uri, GnomeVFSMonitorEventType event_type,
-                                       GenesisController *self);
+static gboolean applications_list_updated (GenesisFSMonitor *monitor, const gchar *path, 
+                                           GenesisFSMonitorEventType type, gpointer data)
+{
+  GenesisController *self = GENESIS_CONTROLLER (data);
+  GenesisControllerPrivate *priv = GENESIS_CONTROLLER_GET_PRIVATE (self);
+  GenesisAppEntry *entry = NULL;
+  gchar *desktop_entry = NULL;
+  gchar *nth_desktop_entry = NULL;
+  guint n = 0;
+
+  if (!g_str_has_suffix (path, DESKTOP_FILE_SUFFIX))
+    return FALSE;
+
+  desktop_entry = g_strdup (path);
+  switch (type)
+  {
+    case EVENT_MODIFIED:
+    case EVENT_REMOVED:
+      do
+      {
+        entry = genesis_controller_get_nth_entry (self, n);
+        g_object_get (G_OBJECT(entry), "desktop_entry", &nth_desktop_entry, NULL);
+
+        if (!g_ascii_strcasecmp (nth_desktop_entry, desktop_entry))
+        {
+          genesis_controller_remove_entry (self, entry);
+          g_free (nth_desktop_entry);
+
+          if (EVENT_REMOVED == type)
+          {
+            g_signal_emit_by_name (self, "app-entry-updated", type, desktop_entry);
+            goto Exit;
+          }
+          else if (EVENT_MODIFIED == type)
+            break;
+        }
+
+        n++;
+      }while (entry);
+
+      if (EVENT_REMOVED == type)
+        break;
+    case EVENT_CREATED:
+      entry = g_object_new (GENESIS_TYPE_APP_ENTRY, "desktop_entry", desktop_entry, NULL);
+
+      if (genesis_app_entry_extract_info (entry, priv->categories))
+        priv->applications = g_list_append (priv->applications, entry);
+
+      g_signal_emit_by_name (self, "app-entry-updated", type, desktop_entry);
+      break;
+    default:
+      break;
+  }
+
+Exit:
+  if (desktop_entry)
+    g_free (desktop_entry);
+
+  return TRUE;
+}
 
 static GHashTable *genesis_controller_parse_menu (GenesisController *self, xmlNode *list)
 {
@@ -130,9 +187,6 @@ static void genesis_controller_finalize (GObject *object)
   GenesisController *self = GENESIS_CONTROLLER (object);
   GenesisControllerPrivate *priv = GENESIS_CONTROLLER_GET_PRIVATE (self);
 
-  if (priv->monitor)
-    gnome_vfs_monitor_cancel (priv->monitor);
-
   if (priv->categories)
     g_free (priv->categories);
 
@@ -162,79 +216,14 @@ static void genesis_controller_init (GenesisController *self)
 {
   GenesisControllerPrivate *priv = GENESIS_CONTROLLER_GET_PRIVATE (self);
 
-  gnome_vfs_init ();
-
   priv->client = gconf_client_get_default ();
   priv->categories = g_hash_table_new (g_str_hash, g_str_equal); 
   priv->categories = genesis_controller_append_categories (self, APPLICATIONS_MENU);
   priv->categories = genesis_controller_append_categories (self, PREFERENCES_MENU);
 
   priv->applications = genesis_controller_append_applications (self);
-
-  gnome_vfs_monitor_add  (&priv->monitor,
-                          DESKTOP_DIR,
-                          GNOME_VFS_MONITOR_DIRECTORY,
-                          (GnomeVFSMonitorCallback) applications_list_updated,
-                          self);
-}
-
-static void applications_list_updated (GnomeVFSMonitorHandle *handle, const gchar *monitor_uri,
-                                       const gchar *info_uri, GnomeVFSMonitorEventType event_type,
-                                       GenesisController *self)
-{
-  GenesisControllerPrivate *priv = GENESIS_CONTROLLER_GET_PRIVATE (self);
-  GenesisAppEntry *entry = NULL;
-  gchar *desktop_entry = NULL;
-  gchar *nth_desktop_entry = NULL;
-  guint n = 0;
-
-  if (!g_str_has_suffix (info_uri, DESKTOP_FILE_SUFFIX))
-    return;
-
-  desktop_entry = uri_to_path (info_uri);
-  switch (event_type)
-  {
-    case GNOME_VFS_MONITOR_EVENT_CHANGED:
-    case GNOME_VFS_MONITOR_EVENT_DELETED:
-      do
-      {
-        entry = genesis_controller_get_nth_entry (self, n);
-        g_object_get (G_OBJECT(entry), "desktop_entry", &nth_desktop_entry, NULL);
-
-        if (!g_ascii_strcasecmp (nth_desktop_entry, desktop_entry))
-        {
-          genesis_controller_remove_entry (self, entry);
-          g_free (nth_desktop_entry);
-
-          if (GNOME_VFS_MONITOR_EVENT_DELETED == event_type)
-          {
-            g_signal_emit_by_name (self, "app-entry-updated", event_type, desktop_entry);
-            goto Exit;
-          }
-          else if (GNOME_VFS_MONITOR_EVENT_CHANGED == event_type)
-            break;
-        }
-
-        n++;
-      }while (entry);
-
-      if (GNOME_VFS_MONITOR_EVENT_DELETED == event_type)
-        break;
-    case GNOME_VFS_MONITOR_EVENT_CREATED:
-      entry = g_object_new (GENESIS_TYPE_APP_ENTRY, "desktop_entry", desktop_entry, NULL);
-
-      if (genesis_app_entry_extract_info (entry, priv->categories))
-        priv->applications = g_list_append (priv->applications, entry);
- 
-      g_signal_emit_by_name (self, "app-entry-updated", event_type, desktop_entry);
-      break;
-    default:
-      break;
-  }
-
-Exit:
-  if (desktop_entry)
-    g_free (desktop_entry);
+  priv->monitor = genesis_fs_monitor_get_singleton ();
+  genesis_fs_monitor_add (priv->monitor, DESKTOP_DIR, IN_ALL_EVENTS, applications_list_updated, self);
 }
 
 /* Public Functions */

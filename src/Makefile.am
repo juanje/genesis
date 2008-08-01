@@ -11,8 +11,9 @@ pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libgenesis.pc
 
 pkgincludedir = $(includedir)/libgenesis/libgenesis
-pkginclude_HEADERS = genesis-utils.h     \
-                     genesis-app-entry.h \
+pkginclude_HEADERS = genesis-utils.h      \
+                     genesis-fs-monitor.h \
+                     genesis-app-entry.h  \
                      genesis-controller.h
 
 genesis-marshalers.c:
@@ -37,6 +38,7 @@ libgenesis_la_LIBADD = $(GLIB_LIBS)     \
 
 libgenesis_la_SOURCES = $(BUILT_SOURCES)     \
                         genesis-utils.c      \
+                        genesis-fs-monitor.c \
                         genesis-app-entry.c  \
                         genesis-controller.c
 
