@@ -319,3 +319,16 @@ void genesis_controller_remove_entry (GenesisController *controller, GenesisAppE
   if (priv->applications)
     priv->applications = g_list_remove (priv->applications, entry);
 }
+
+GList* genesis_controller_get_categories (GenesisController *controller)
+{
+  GenesisControllerPrivate *priv = GENESIS_CONTROLLER_GET_PRIVATE (controller);
+  GList *category_list = NULL;
+
+  if (priv->categories)
+  {
+    category_list = g_hash_table_get_values (priv->categories);
+  }
+
+  return category_list;
+}

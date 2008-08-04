@@ -55,6 +55,7 @@ gboolean genesis_controller_start_app_from_name (GenesisController *controller, 
 GenesisAppEntry *genesis_controller_get_nth_entry (GenesisController *controller, guint n);
 GenesisAppEntry *genesis_controller_get_entry_by_name (GenesisController *controller, gchar* name);
 void genesis_controller_remove_entry (GenesisController *controller, GenesisAppEntry *entry);
+GList* genesis_controller_get_categories (GenesisController *controller);
 
 G_END_DECLS
 

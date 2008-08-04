@@ -101,6 +101,28 @@ static void home_window_construct (GenesisController *controller)
   GtkWidget *textview, *button;
   GenesisAppEntry *entry = NULL;
   guint n = 0;
+  GList *cat_list;
+
+  cat_list = genesis_controller_get_categories (controller);
+
+  if (!cat_list)
+    g_print ("failed to get categories list.\n");
+  else
+  {
+    gchar *cat_name = NULL;
+    guint i = 0;
+    do
+    {
+      cat_name = g_list_nth_data (cat_list, i);
+
+      if (cat_name)
+        g_print ("No.%d category name %s\n", i, cat_name);
+      else
+        g_print ("total %d get back, NULL pointer\n", i);
+
+      i++;
+    } while (cat_name);
+  }
 
   window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
   gtk_window_set_title (GTK_WINDOW (window), "Probots Face");
