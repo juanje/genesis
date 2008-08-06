@@ -22,7 +22,9 @@
 #include "gtk/gtk.h"
 #include "genesis-common.h"
 
-static void selection_changed_callback (GtkTreeSelection *selection, gpointer user_data)
+static void tree_view_append_entry (GtkTreeModel *model, gchar *entry_name);
+
+static void app_selection_changed_callback (GtkTreeSelection *selection, gpointer user_data)
 {
   GtkWidget *textview = GTK_WIDGET (user_data);
   GtkTextBuffer *buffer;
@@ -57,6 +59,36 @@ static void selection_changed_callback (GtkTreeSelection *selection, gpointer us
   } 
 }
 
+static void cat_selection_changed_callback (GtkTreeSelection *selection, gpointer user_data)
+{
+  GtkWidget *app_treeview = GTK_WIDGET (user_data);
+  GtkTreeModel *cat_model, *app_model;
+  GtkTreeIter iter;
+  gchar *selected_category;
+  GenesisController *controller = genesis_controller_get_singleton ();
+  GList *applications;
+  GenesisAppEntry *entry = NULL;
+  guint n = 0;
+
+  if (gtk_tree_selection_get_selected (selection, &cat_model, &iter))
+  {
+    gtk_tree_model_get (cat_model, &iter, 0, &selected_category, -1);
+
+    app_model = gtk_tree_view_get_model (GTK_TREE_VIEW (app_treeview));
+    gtk_list_store_clear (GTK_LIST_STORE (app_model));
+
+    applications = genesis_controller_get_applications_by_category (controller, selected_category);
+    do
+    {
+      entry = g_list_nth_data (applications, n++);
+      if (!entry)
+        continue;
+
+      tree_view_append_entry (app_model, genesis_app_entry_get_name (entry));
+    } while (entry);
+  }
+}
+
 static void start_button_clicked_callback (GtkButton *button, gpointer user_data)
 {
   GtkWidget *treeview = GTK_WIDGET (user_data);
@@ -76,7 +108,6 @@ static void start_button_clicked_callback (GtkButton *button, gpointer user_data
 
 static void app_entry_updated_callback (GenesisController *controller, guint event_type, gchar *info_path, gpointer user_data)
 {
-  g_print ("app_entry_updated_callback: entered\n");
   if (info_path)
     g_print ("app_entry_updated_callback: event %d happened to %s\n", event_type, info_path);
   else
@@ -95,13 +126,58 @@ static void home_window_construct (GenesisController *controller)
 {
   GtkWidget *window;
   GtkWidget *hbox, *vbox;
-  GtkWidget *treeview;
-  GtkTreeModel *model;
-  GtkTreeSelection *selection;
+  GtkWidget *app_treeview, *cat_treeview;
+  GtkWidget *scrolledwindow;
+  GtkTreeModel *app_model, *cat_model;
+  GtkTreeSelection *app_selection, *cat_selection;
   GtkWidget *textview, *button;
   GenesisAppEntry *entry = NULL;
   guint n = 0;
   GList *cat_list;
+
+  window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
+  gtk_window_set_title (GTK_WINDOW (window), "Genesis Face");
+  g_signal_connect (G_OBJECT (window), "delete-event",  (GCallback) gtk_main_quit, NULL);
+
+  hbox = gtk_hbox_new (FALSE,0);
+  gtk_container_add (GTK_CONTAINER (window), hbox);
+
+  vbox = gtk_vbox_new (FALSE,0);
+  gtk_box_pack_end (GTK_BOX(hbox), vbox, FALSE, FALSE, 0);
+
+  textview = gtk_text_view_new ();
+  gtk_box_pack_start (GTK_BOX(vbox), textview, FALSE, FALSE, 0);
+
+  scrolledwindow = gtk_scrolled_window_new (NULL, NULL);
+  gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolledwindow), 
+                                  GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+  gtk_box_pack_end (GTK_BOX(hbox), scrolledwindow, FALSE, FALSE, 0);
+
+  app_treeview = gtk_tree_view_new ();
+  gtk_tree_view_insert_column_with_attributes (GTK_TREE_VIEW (app_treeview),
+                                               -1, "Applications",
+                                               gtk_cell_renderer_text_new(),
+                                               "text", 0, NULL);
+  app_selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (app_treeview));
+
+  gtk_tree_selection_set_mode (app_selection, GTK_SELECTION_SINGLE);
+  g_signal_connect (G_OBJECT (app_selection), "changed",
+                    G_CALLBACK (app_selection_changed_callback), textview);
+  gtk_container_add (GTK_CONTAINER (scrolledwindow), app_treeview);
+
+  app_model = GTK_TREE_MODEL (gtk_list_store_new (1, G_TYPE_STRING));
+  gtk_tree_view_set_model (GTK_TREE_VIEW(app_treeview), app_model);
+
+  do
+  {
+    entry = genesis_controller_get_nth_entry (controller, n++);
+    if (entry)
+    {
+      gchar *entry_name = genesis_app_entry_get_name (entry);
+
+      tree_view_append_entry (app_model, entry_name);
+    }
+  }while (entry);
 
   cat_list = genesis_controller_get_categories (controller);
 
@@ -111,63 +187,42 @@ static void home_window_construct (GenesisController *controller)
   {
     gchar *cat_name = NULL;
     guint i = 0;
+
+    scrolledwindow = gtk_scrolled_window_new (NULL, NULL);
+    gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolledwindow), 
+                                    GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+    gtk_box_pack_end (GTK_BOX(hbox), scrolledwindow, FALSE, FALSE, 0);
+
+    cat_treeview = gtk_tree_view_new ();
+    gtk_tree_view_insert_column_with_attributes (GTK_TREE_VIEW (cat_treeview),
+                                                 -1, "Categories",
+                                                 gtk_cell_renderer_text_new(),
+                                                 "text", 0, NULL);
+    cat_selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (cat_treeview));
+
+    gtk_tree_selection_set_mode (cat_selection, GTK_SELECTION_SINGLE);
+    g_signal_connect (G_OBJECT (cat_selection), "changed",
+                      G_CALLBACK (cat_selection_changed_callback), app_treeview);
+    gtk_container_add (GTK_CONTAINER (scrolledwindow), cat_treeview);
+
+    cat_model = GTK_TREE_MODEL (gtk_list_store_new (1, G_TYPE_STRING));
+    gtk_tree_view_set_model (GTK_TREE_VIEW(cat_treeview), cat_model);
+
     do
     {
-      cat_name = g_list_nth_data (cat_list, i);
+      cat_name = g_list_nth_data (cat_list, i++);
 
-      if (cat_name)
-        g_print ("No.%d category name %s\n", i, cat_name);
-      else
-        g_print ("total %d get back, NULL pointer\n", i);
+      if (!cat_name)
+        continue;
 
-      i++;
+      tree_view_append_entry (cat_model, cat_name);
     } while (cat_name);
   }
-
-  window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
-  gtk_window_set_title (GTK_WINDOW (window), "Probots Face");
-  g_signal_connect (G_OBJECT (window), "delete-event",  (GCallback) gtk_main_quit, NULL);
-
-  hbox = gtk_hbox_new (FALSE,0);
-  gtk_container_add (GTK_CONTAINER (window), hbox);
-
-  vbox = gtk_vbox_new (FALSE,0);
-  gtk_box_pack_start (GTK_BOX(hbox), vbox, FALSE, FALSE, 0);
-
-  textview = gtk_text_view_new ();
-  gtk_box_pack_start (GTK_BOX(vbox), textview, FALSE, FALSE, 0);
-
-  treeview = gtk_tree_view_new ();
-  gtk_tree_view_insert_column_with_attributes (GTK_TREE_VIEW (treeview), 
-                                               -1, "Name", 
-                                               gtk_cell_renderer_text_new(), 
-                                               "text", 0, NULL);
-  selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (treeview));
-
-  gtk_tree_selection_set_mode (selection, GTK_SELECTION_SINGLE);
-  g_signal_connect (G_OBJECT (selection), "changed",
-                    G_CALLBACK (selection_changed_callback), textview);
-  gtk_box_pack_start (GTK_BOX(hbox), treeview, FALSE, FALSE, 0);
-
-  model = GTK_TREE_MODEL (gtk_list_store_new (1, G_TYPE_STRING));
-  gtk_tree_view_set_model (GTK_TREE_VIEW(treeview), model);
-
-  do
-  {
-    entry = genesis_controller_get_nth_entry (controller, n);
-    if (entry)
-    {
-      gchar *entry_name = genesis_app_entry_get_name (entry);
-
-      tree_view_append_entry (model, entry_name);
-      n++;
-    }
-  }while (entry);
 
   button = gtk_button_new_with_label ("Start");
 
   g_signal_connect (G_OBJECT (button), "clicked",
-                    G_CALLBACK (start_button_clicked_callback), treeview);
+                    G_CALLBACK (start_button_clicked_callback), app_treeview);
 
   gtk_box_pack_start (GTK_BOX(vbox), button, FALSE, FALSE, 0);
 

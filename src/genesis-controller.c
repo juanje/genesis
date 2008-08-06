@@ -332,3 +332,27 @@ GList* genesis_controller_get_categories (GenesisController *controller)
 
   return category_list;
 }
+
+GList* genesis_controller_get_applications_by_category (GenesisController *controller, const gchar *name)
+{
+  GenesisControllerPrivate *priv = GENESIS_CONTROLLER_GET_PRIVATE (controller);
+  GList *application_list = NULL;
+  GenesisAppEntry *entry;
+  guint n = 0;
+  gchar *category_name;
+
+  do
+  {
+    entry = g_list_nth_data (priv->applications, n++);
+    if (!entry)
+      continue;
+
+    category_name = genesis_app_entry_get_category (entry);
+    if (!category_name || g_strcasecmp (category_name, name))
+      continue;
+
+    application_list = g_list_append (application_list, entry);
+  } while (entry);
+
+  return application_list;
+}

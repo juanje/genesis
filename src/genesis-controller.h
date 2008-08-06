@@ -56,6 +56,7 @@ GenesisAppEntry *genesis_controller_get_nth_entry (GenesisController *controller
 GenesisAppEntry *genesis_controller_get_entry_by_name (GenesisController *controller, gchar* name);
 void genesis_controller_remove_entry (GenesisController *controller, GenesisAppEntry *entry);
 GList* genesis_controller_get_categories (GenesisController *controller);
+GList* genesis_controller_get_applications_by_category (GenesisController *controller, const gchar *name);
 
 G_END_DECLS
 
