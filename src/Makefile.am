@@ -1,7 +1,5 @@
 INCLUDES = $(GLIB_CFLAGS)     \
            $(GTK_CFLAGS)      \
-           $(GNOMEVFS_CFLAGS) \
-           $(GCONF_CFLAGS)    \
            $(LIBXML_CFLAGS)   \
            $(LIBWNCK_CFLAGS)
 
@@ -31,8 +29,6 @@ noinst_HEADERS = genesis-marshalers.h
 
 libgenesis_la_LIBADD = $(GLIB_LIBS)     \
                        $(GTK_LIBS)      \
-                       $(GNOMEVFS_LIBS) \
-                       $(GCONF_LIBS)    \
                        $(LIBXML_LIBS)   \
                        $(LIBWNCK_LIBS)
 

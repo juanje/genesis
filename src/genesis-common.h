@@ -38,8 +38,6 @@
 #include <glib-object.h>
 #include <gtk/gtk.h>
 #include <gdk/gdkx.h>
-#include <libgnomevfs/gnome-vfs.h>
-#include <gconf/gconf-client.h>
 #include <libxml/parser.h>
 #define WNCK_I_KNOW_THIS_IS_UNSTABLE
 #include <libwnck/libwnck.h>

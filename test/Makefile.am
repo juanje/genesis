@@ -1,16 +1,13 @@
 COMMON_CFLAGS = $(GLIB_CFLAGS)     \
                 $(GTK_CFLAGS)      \
-                $(GNOMEVFS_CFLAGS) \
-                $(GCONF_CFLAGS)    \
                 $(LIBXML_CFLAGS)   \
                 $(LIBWNCK_CFLAGS)  \
                 -I../src/
 
-COMMON_LDFLAGS = ../src/.libs/libgenesis.so \
-                 $(GLIB_LIBS)               \
-                 $(GNOMEVFS_LIBS)           \
+COMMON_LDFLAGS = $(GLIB_LIBS)               \
                  $(GTK_LIBS)                \
-                 $(LIBWNCK_LIBS)
+                 $(LIBWNCK_LIBS)            \
+                 ../src/.libs/libgenesis.so
 
 bin_PROGRAMS = app_entry_test fs_monitor_test
 app_entry_test_CPPFLAGS = $(COMMON_CFLAGS)

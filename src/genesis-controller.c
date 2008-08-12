@@ -42,7 +42,6 @@ struct _GenesisControllerPrivate
 {
   GList *applications;
   GHashTable *categories;
-  GConfClient *client;
   GenesisFSMonitor  *monitor;
 };
 
@@ -216,7 +215,6 @@ static void genesis_controller_init (GenesisController *self)
 {
   GenesisControllerPrivate *priv = GENESIS_CONTROLLER_GET_PRIVATE (self);
 
-  priv->client = gconf_client_get_default ();
   priv->categories = g_hash_table_new (g_str_hash, g_str_equal); 
   priv->categories = genesis_controller_append_categories (self, APPLICATIONS_MENU);
   priv->categories = genesis_controller_append_categories (self, PREFERENCES_MENU);
