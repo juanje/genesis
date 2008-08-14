@@ -6,9 +6,9 @@ INCLUDES = $(GLIB_CFLAGS)     \
 AM_LDFLAGS = -module -avoid-version
 
 pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = libgenesis.pc
+pkgconfig_DATA = genesis.pc
 
-pkgincludedir = $(includedir)/genesis/genesis
+pkgincludedir = $(includedir)/genesis
 pkginclude_HEADERS = genesis.h            \
                      genesis-app-entry.h  \
                      genesis-controller.h

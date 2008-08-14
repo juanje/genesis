@@ -53,7 +53,7 @@ AC_SUBST(genesisdir)
 AC_CONFIG_FILES([
 Makefile
 src/Makefile
-src/libgenesis.pc
+src/genesis.pc
 test/Makefile
 ])
 
