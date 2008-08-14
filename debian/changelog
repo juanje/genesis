@@ -6,6 +6,9 @@ genesis (0.0.1-2) hardy; urgency=low
   * Add interface to return an application list by a specified category.
   * Remove gnome-vfs-2 and gconf package checking.
   * Clean up source package.
+  * Create genesis.h for users to easily use genesis.
+  * Remove fs-monitor from controller, fs monitoring will be done in daemon.
+  * Remove fs-monitor-test accordingly.
 
  -- Horace Li <horace.li@intel.com>  Fri, 25 Jul 2008 16:09:50 +0800
 

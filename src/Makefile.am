@@ -8,9 +8,8 @@ AM_LDFLAGS = -module -avoid-version
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libgenesis.pc
 
-pkgincludedir = $(includedir)/libgenesis/libgenesis
-pkginclude_HEADERS = genesis-utils.h      \
-                     genesis-fs-monitor.h \
+pkgincludedir = $(includedir)/genesis/genesis
+pkginclude_HEADERS = genesis.h            \
                      genesis-app-entry.h  \
                      genesis-controller.h
 
@@ -25,7 +24,10 @@ BUILT_SOURCES = genesis-marshalers.c \
 
 genesis_LTLIBRARIES = libgenesis.la
 
-noinst_HEADERS = genesis-marshalers.h
+noinst_HEADERS = genesis-marshalers.h \
+                 genesis-common.h     \
+                 genesis-fs-monitor.h \
+                 genesis-utils.h
 
 libgenesis_la_LIBADD = $(GLIB_LIBS)     \
                        $(GTK_LIBS)      \

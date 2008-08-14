@@ -44,7 +44,7 @@ struct _GenesisControllerPrivate
   GHashTable *categories;
   GenesisFSMonitor  *monitor;
 };
-
+#if 0
 static gboolean applications_list_updated (GenesisFSMonitor *monitor, const gchar *path, 
                                            GenesisFSMonitorEventType type, gpointer data)
 {
@@ -105,7 +105,7 @@ Exit:
 
   return TRUE;
 }
-
+#endif
 static GHashTable *genesis_controller_parse_menu (GenesisController *self, xmlNode *list)
 {
   GenesisControllerPrivate *priv = GENESIS_CONTROLLER_GET_PRIVATE (self);
@@ -220,8 +220,10 @@ static void genesis_controller_init (GenesisController *self)
   priv->categories = genesis_controller_append_categories (self, PREFERENCES_MENU);
 
   priv->applications = genesis_controller_append_applications (self);
+#if 0
   priv->monitor = genesis_fs_monitor_get_singleton ();
   genesis_fs_monitor_add (priv->monitor, DESKTOP_DIR, IN_ALL_EVENTS, applications_list_updated, self);
+#endif
 }
 
 /* Public Functions */
