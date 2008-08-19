@@ -21,7 +21,7 @@
 
 #include "genesis-common.h"
 
-#define EVENTS_MAXIMUM              4096
+#define MAXIMUM_NUMBER 2048
 
 #define GENESIS_FS_MONITOR_GET_PRIVATE(object) \
         (G_TYPE_INSTANCE_GET_PRIVATE ((object), GENESIS_TYPE_FS_MONITOR, GenesisFSMonitorPrivate))
@@ -40,7 +40,7 @@ struct _GenesisFSMonitorPrivate
 {
   GThread *thread; 
   gint inotify_handle;
-  struct inotify_event event[EVENTS_MAXIMUM];
+  struct inotify_event event[MAXIMUM_NUMBER];
 };
 
 static GList *monitored_list;
@@ -82,12 +82,8 @@ static struct inotify_event* genesis_fs_monitor_get_next_event (GenesisFSMonitor
 {
   GenesisFSMonitorPrivate *priv = GENESIS_FS_MONITOR_GET_PRIVATE (monitor);
   static fd_set set;
-  static gint complete_length = 0;
-  static guint total_bytes, read_out_bytes;
+  static guint read_out_bytes;
   gint ret;
-
-  if (complete_length == 0)
-    total_bytes = 0;
 
   FD_ZERO(&set);
   FD_SET(priv->inotify_handle, &set);
@@ -98,21 +94,17 @@ static struct inotify_event* genesis_fs_monitor_get_next_event (GenesisFSMonitor
   do
   {
     ret = ioctl (priv->inotify_handle, FIONREAD, &read_out_bytes);
-  } while (!ret && read_out_bytes < sizeof (struct inotify_event));
+    if (ret == 0)
+      break;
+  } while (read_out_bytes < sizeof (struct inotify_event));
 
-  if (-1 == ret)
+  if (ret <= 0)
     return NULL;
 
-  read_out_bytes = read (priv->inotify_handle, &priv->event[0] + total_bytes, sizeof(struct inotify_event)*EVENTS_MAXIMUM - total_bytes);
+  read_out_bytes = read (priv->inotify_handle, &priv->event[0], sizeof(struct inotify_event)*MAXIMUM_NUMBER);
 
-  if (total_bytes <= 0)
+  if (read_out_bytes <= 0)
     return NULL;
-
-  total_bytes += read_out_bytes;
-  complete_length = sizeof (struct inotify_event) + (&priv->event[0])->len;
-
-  if (total_bytes == complete_length)
-    complete_length = 0;
 
   return &priv->event[0];
 }
