@@ -43,18 +43,50 @@ static void app_selection_changed_callback (GtkTreeSelection *selection, gpointe
 
     entry = genesis_controller_get_entry_by_name (controller, entry_name);
     if (entry)
-      entry_info = g_strdup_printf ("-=-=-=-=-=-=-=-\nAppEntry Information \nname : %s \nicon : %s \nexec : %s \nshowup : %d \ncategory : %s \n-=-=-=-=-=-=-=-\n",
-                                    genesis_app_entry_get_name (entry),
-                                    genesis_app_entry_get_icon (entry),
-                                    genesis_app_entry_get_exec (entry),
-                                    genesis_app_entry_is_showup (entry),
-                                    genesis_app_entry_get_category (entry));
-    else
+    {
+      GList *categories = genesis_app_entry_get_categories(entry);
+
+      if (categories)
+      {
+	GList *tmp;
+	gchar *tmp_entry;
+	
+	tmp = categories;
+	entry_info = g_strdup_printf (
+	  "-=-=-=-=-=-=-=-\n"
+	  "AppEntry Information \n"
+	  "name : %s \n"
+	  "icon : %s \n"
+	  "exec : %s \n"
+	  "showup : %d \n"
+	  "category : %s",
+	  genesis_app_entry_get_name (entry),
+	  genesis_app_entry_get_icon (entry),
+	  genesis_app_entry_get_exec (entry),
+	  genesis_app_entry_is_showup (entry),
+	  (gchar *)tmp->data);
+	tmp = tmp->next;
+	while (tmp)
+	{
+	  tmp_entry = entry_info;
+	  entry_info = g_strdup_printf("%s, %s", tmp_entry, (gchar *)tmp->data);
+	  g_free(tmp_entry);
+	  tmp = tmp->next;
+	}
+	
+	tmp_entry = entry_info;
+	entry_info = g_strdup_printf("%s\n"
+				     "-=-=-=-=-=-=-=-\n", tmp_entry);
+	g_free(tmp_entry);
+      } 
+    }
+
+    if (!entry_info)
       entry_info = g_strdup ("Invalid desktop entry!");
 
     buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (textview));
     gtk_text_buffer_set_text (buffer, entry_info, -1);
-
+    g_free(entry_info);
     gtk_widget_show_all (textview);
   } 
 }
@@ -67,25 +99,25 @@ static void cat_selection_changed_callback (GtkTreeSelection *selection, gpointe
   gchar *selected_category;
   GenesisController *controller = genesis_controller_get_singleton ();
   GList *applications;
-  GenesisAppEntry *entry = NULL;
-  guint n = 0;
+  GList *tmp;
 
-  if (gtk_tree_selection_get_selected (selection, &cat_model, &iter))
+  if (!gtk_tree_selection_get_selected (selection, &cat_model, &iter))
+    return;
+
+  gtk_tree_model_get (cat_model, &iter, 0, &selected_category, -1);
+
+  app_model = gtk_tree_view_get_model (GTK_TREE_VIEW (app_treeview));
+  gtk_list_store_clear (GTK_LIST_STORE (app_model));
+
+  applications = genesis_controller_get_applications_by_category (
+    controller, selected_category);
+  tmp = applications;
+  while (tmp)
   {
-    gtk_tree_model_get (cat_model, &iter, 0, &selected_category, -1);
+    GenesisAppEntry *entry = tmp->data;
 
-    app_model = gtk_tree_view_get_model (GTK_TREE_VIEW (app_treeview));
-    gtk_list_store_clear (GTK_LIST_STORE (app_model));
-
-    applications = genesis_controller_get_applications_by_category (controller, selected_category);
-    do
-    {
-      entry = g_list_nth_data (applications, n++);
-      if (!entry)
-        continue;
-
-      tree_view_append_entry (app_model, genesis_app_entry_get_name (entry));
-    } while (entry);
+    tree_view_append_entry (app_model, genesis_app_entry_get_name (entry));
+    tmp = tmp->next;
   }
 }
 
@@ -185,8 +217,7 @@ static void home_window_construct (GenesisController *controller)
     g_print ("failed to get categories list.\n");
   else
   {
-    gchar *cat_name = NULL;
-    guint i = 0;
+    GList *tmp;
 
     scrolledwindow = gtk_scrolled_window_new (NULL, NULL);
     gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolledwindow), 
@@ -208,15 +239,14 @@ static void home_window_construct (GenesisController *controller)
     cat_model = GTK_TREE_MODEL (gtk_list_store_new (1, G_TYPE_STRING));
     gtk_tree_view_set_model (GTK_TREE_VIEW(cat_treeview), cat_model);
 
-    do
+    tmp = cat_list;
+    while (tmp) 
     {
-      cat_name = g_list_nth_data (cat_list, i++);
-
-      if (!cat_name)
-        continue;
-
-      tree_view_append_entry (cat_model, cat_name);
-    } while (cat_name);
+      GenesisCategory *category = tmp->data;
+      tree_view_append_entry (cat_model, category->name);
+      tmp = tmp->next;
+    }
+    g_list_free(cat_list);
   }
 
   button = gtk_button_new_with_label ("Start");

@@ -38,11 +38,16 @@ enum
   N_SIGNALS
 };
 
+/**
+ * _GenesisControllerPrivate:
+ * @categories: Hash table of GenesisCategory elements
+ * @applications: GList of GenesisAppEntry elements
+ */
 struct _GenesisControllerPrivate
 {
-  GList *applications;
   GHashTable *categories;
-  GenesisFSMonitor  *monitor;
+  GList *applications;
+//  GenesisFSMonitor  *monitor;
 };
 #if 0
 static gboolean applications_list_updated (GenesisFSMonitor *monitor, const gchar *path, 
@@ -90,7 +95,10 @@ static gboolean applications_list_updated (GenesisFSMonitor *monitor, const gcha
     case EVENT_CREATED:
       entry = g_object_new (GENESIS_TYPE_APP_ENTRY, "desktop_entry", desktop_entry, NULL);
 
-      if (genesis_app_entry_extract_info (entry, priv->categories))
+      /* Extract the information for this entry from its desktop file and
+       * populate the GenesisAppEntry fields, as well as adding to the
+       * GenesisCategory hash table. */
+      if (genesis_app_entry_extract_info(entry, priv->categories))
         priv->applications = g_list_append (priv->applications, entry);
 
       g_signal_emit_by_name (self, "app-entry-updated", type, desktop_entry);
@@ -135,6 +143,7 @@ static GHashTable *genesis_controller_parse_menu (GenesisController *self, xmlNo
   return priv->categories;
 }
 
+#if 0
 static GHashTable *genesis_controller_append_categories (GenesisController *self, const gchar *menu)
 {
   xmlDoc *doc = NULL;
@@ -148,6 +157,7 @@ static GHashTable *genesis_controller_append_categories (GenesisController *self
 
   return genesis_controller_parse_menu (self, root);
 }
+#endif
 
 static GList *genesis_controller_append_applications (GenesisController *self)
 {
@@ -157,8 +167,10 @@ static GList *genesis_controller_append_applications (GenesisController *self)
   struct stat buf;
   gchar *desktop_path = NULL;
 
-  if ((dir_handle = opendir(DESKTOP_DIR)) == NULL)
+  if ((dir_handle = opendir(DESKTOP_DIR)) == NULL) {
     g_warning ("Error reading file '%s'\n", DESKTOP_DIR);
+    return priv->applications;
+  }
 
   while ((d = readdir (dir_handle)) != NULL) {
     desktop_path = g_build_filename (DESKTOP_DIR, d->d_name, NULL);
@@ -176,7 +188,6 @@ static GList *genesis_controller_append_applications (GenesisController *self)
   }
 
   closedir (dir_handle);
-  g_free (d);
 
   return priv->applications;
 }
@@ -211,14 +222,29 @@ static void genesis_controller_class_init (GenesisControllerClass *klass)
                 G_TYPE_UINT, G_TYPE_POINTER);
 }
 
+static void genesis_category_destroy(GenesisCategory *category)
+{
+  GList *tmp = category->applications;
+  g_free(category->name);
+  while (tmp) {
+    g_object_unref(tmp->data);
+    tmp = tmp->next;
+  }
+  g_list_free(category->applications);
+  g_free(category);
+  
+}
+
 static void genesis_controller_init (GenesisController *self)
 {
   GenesisControllerPrivate *priv = GENESIS_CONTROLLER_GET_PRIVATE (self);
 
-  priv->categories = g_hash_table_new (g_str_hash, g_str_equal); 
+  priv->categories = g_hash_table_new_full(
+    g_str_hash, g_str_equal, NULL, (GDestroyNotify)genesis_category_destroy); 
+/*
   priv->categories = genesis_controller_append_categories (self, APPLICATIONS_MENU);
   priv->categories = genesis_controller_append_categories (self, PREFERENCES_MENU);
-
+*/
   priv->applications = genesis_controller_append_applications (self);
 #if 0
   priv->monitor = genesis_fs_monitor_get_singleton ();
@@ -246,40 +272,33 @@ gboolean genesis_controller_start_app_from_path (GenesisController *controller, 
   genesis_app_entry_set_exec (entry, path);
   genesis_app_entry_set_name (entry, path);
 
-  priv->applications = g_list_append (priv->applications, entry);
+  priv->applications = g_list_append (priv->applications, G_OBJECT(entry));
 
   genesis_app_entry_start (entry);
   return TRUE;
 }
 
-gboolean genesis_controller_start_app_from_name (GenesisController *controller, gchar* name)
+gboolean genesis_controller_start_app_from_name (GenesisController *controller, 
+						 gchar* name)
 {
   GenesisControllerPrivate *priv = GENESIS_CONTROLLER_GET_PRIVATE (controller);
-  GenesisAppEntry *entry = NULL;
+  GList *tmp = priv->applications;
 
-  guint len = g_list_length (priv->applications);
-  gboolean foundApp = FALSE;
+  while (tmp) {
+    GenesisAppEntry *entry = GENESIS_APP_ENTRY(tmp->data);
 
-  for (int i = 0; i < len; i++) 
-  {
-    entry = GENESIS_APP_ENTRY (g_list_nth_data (priv->applications, i));
-
-    // compare name passed in with app name in list
+    /* compare name passed in with app name in list */
     if (!g_ascii_strcasecmp (genesis_app_entry_get_name (entry), name)) 
     {
-      foundApp = TRUE;
-      break;
+      genesis_app_entry_start(entry);
+      return TRUE;
     }
+
+    tmp = tmp->next;
   }
 
-  if (!foundApp) 
-  {
-    g_warning ("Couldn't find app with name = %s\n", name);
-    return FALSE;
-  }
-
-  genesis_app_entry_start (entry);
-  return TRUE;
+  g_warning ("Couldn't find app with name = %s\n", name);
+  return FALSE;
 }
 
 GenesisAppEntry *genesis_controller_get_nth_entry (GenesisController *controller, guint n)
@@ -296,20 +315,20 @@ GenesisAppEntry *genesis_controller_get_nth_entry (GenesisController *controller
 GenesisAppEntry *genesis_controller_get_entry_by_name (GenesisController *controller, gchar* name)
 {
   GenesisControllerPrivate *priv = GENESIS_CONTROLLER_GET_PRIVATE (controller);
-  GenesisAppEntry *entry = NULL;
+  GList *tmp = priv->applications;
 
-  guint len = g_list_length (priv->applications);
-
-  for (int i = 0; i < len; i++)
+  while (tmp)
   {
-    entry = GENESIS_APP_ENTRY (g_list_nth_data (priv->applications, i));
+    GenesisAppEntry *entry = GENESIS_APP_ENTRY (tmp->data);
 
     // compare name passed in with app name in list
     if (!g_ascii_strcasecmp (genesis_app_entry_get_name (entry), name))
       return entry;
+
+    tmp = tmp->next;
   }
 
-  return entry;
+  return NULL;
 }
 
 void genesis_controller_remove_entry (GenesisController *controller, GenesisAppEntry *entry)
@@ -323,36 +342,52 @@ void genesis_controller_remove_entry (GenesisController *controller, GenesisAppE
 GList* genesis_controller_get_categories (GenesisController *controller)
 {
   GenesisControllerPrivate *priv = GENESIS_CONTROLLER_GET_PRIVATE (controller);
-  GList *category_list = NULL;
+  GList *categories;
+  GList *tmp;
+  GList *results = NULL;
 
-  if (priv->categories)
+  if (!priv->categories)
+    return NULL;
+
+  categories = g_hash_table_get_values (priv->categories);
+  tmp = categories;
+
+  while (tmp)
   {
-    category_list = g_hash_table_get_values (priv->categories);
+    GenesisCategory *category = tmp->data;
+    if (category->is_primary)
+      results = g_list_append(results, category);
+    tmp = tmp->next;
   }
 
-  return category_list;
+  g_list_free(categories);
+
+  return results;
 }
+
+
+GList* genesis_controller_get_all_categories (GenesisController *controller)
+{
+  GenesisControllerPrivate *priv = GENESIS_CONTROLLER_GET_PRIVATE (controller);
+
+  if (!priv->categories)
+    return NULL;
+
+  return g_hash_table_get_values (priv->categories);
+}
+
 
 GList* genesis_controller_get_applications_by_category (GenesisController *controller, const gchar *name)
 {
   GenesisControllerPrivate *priv = GENESIS_CONTROLLER_GET_PRIVATE (controller);
-  GList *application_list = NULL;
-  GenesisAppEntry *entry;
-  guint n = 0;
-  gchar *category_name;
+  GenesisCategory *category = g_hash_table_lookup (priv->categories, name);
+  if (!category)
+    return NULL;
+  return g_list_copy(category->applications);
+}
 
-  do
-  {
-    entry = g_list_nth_data (priv->applications, n++);
-    if (!entry)
-      continue;
-
-    category_name = genesis_app_entry_get_category (entry);
-    if (!category_name || g_strcasecmp (category_name, name))
-      continue;
-
-    application_list = g_list_append (application_list, entry);
-  } while (entry);
-
-  return application_list;
+GList* genesis_controller_get_all_applications (GenesisController *controller)
+{
+  GenesisControllerPrivate *priv = GENESIS_CONTROLLER_GET_PRIVATE (controller);
+  return g_list_copy(priv->applications);
 }

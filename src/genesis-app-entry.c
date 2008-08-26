@@ -42,7 +42,7 @@ struct _GenesisAppEntryPrivate
   gchar *service;
   gchar *id;
   gboolean showup;
-  gchar *category;
+  GList *categories; /* Do not free gpointer elements */
   gchar *splash_screen;
 
   GtkWidget *splashscreen;
@@ -188,6 +188,7 @@ gboolean genesis_app_entry_extract_info (GenesisAppEntry *entry, GHashTable *has
   gchar **categories = NULL, **onlyshowin = NULL;
   gchar *splash_abs_path = NULL;
   GtkWidget *image = NULL;
+  gchar **tmp;
 
   if (!priv->filename)
   {
@@ -228,16 +229,8 @@ gboolean genesis_app_entry_extract_info (GenesisAppEntry *entry, GHashTable *has
                                       G_KEY_FILE_DESKTOP_KEY_ICON,
                                       NULL);
 
-  if (priv->icon)
-  {
-    //if there is an extension, strip it.  simple logic will catch 90% (.jpg, .png)
-    int pos = strlen(priv->icon)-4;  //extension length = 4
-    if (pos > 0 && priv->icon[pos] == '.')
-      priv->icon[pos] = '\0';
-  }
-
   if (!priv->icon)
-    priv->icon = g_strdup ("null");
+    priv->icon = g_strdup ("default");
 
   priv->exec = g_key_file_get_string (key_file,
                                       G_KEY_FILE_DESKTOP_GROUP,
@@ -272,28 +265,51 @@ gboolean genesis_app_entry_extract_info (GenesisAppEntry *entry, GHashTable *has
   }
 
   if (priv->screen)
-    g_signal_connect (G_OBJECT (priv->screen), "window_opened", G_CALLBACK (genesis_app_entry_window_opened), entry);
+    g_signal_connect(G_OBJECT (priv->screen), "window_opened", 
+		     G_CALLBACK (genesis_app_entry_window_opened), entry);
 
-  priv->category = NULL;
-  categories = g_key_file_get_string_list (key_file,
-                                           G_KEY_FILE_DESKTOP_GROUP,
-                                           G_KEY_FILE_DESKTOP_KEY_CATEGORIES,
-                                           NULL,
-                                           NULL);
+  categories = g_key_file_get_string_list(
+    key_file, G_KEY_FILE_DESKTOP_GROUP, G_KEY_FILE_DESKTOP_KEY_CATEGORIES,
+    NULL, NULL);
 
-  if (NULL != categories)
-  {
-    for (gint j = 0; categories[j]; j++) 
+  printf("%s categories: ", priv->name);
+  tmp = categories;
+  while (tmp && *tmp) {
+    GenesisCategory *category;
+
+    /* Look up this entry in the GenesisController's hashtable of categories
+     * to find the GenesisCategory entry.  If it doesn't exist, create it
+     * and initialize it. */
+    category = g_hash_table_lookup(hashtable, *tmp);
+    if (!category)
     {
-      priv->category = (gchar*) g_hash_table_lookup (hashtable, categories[j]);
-      if (priv->category)
-        break;
+      category = g_new0(GenesisCategory, 1);
+      category->name = g_strdup(*tmp);
+      g_hash_table_insert(hashtable, category->name, category);
     }
-    g_strfreev (categories);
-  }
 
-  if (!priv->category)
-    priv->category = g_strdup ("Extras");
+    /* Add this category to the list of categories this application 
+     * references */
+    priv->categories = g_list_append(priv->categories, category->name);
+
+    if (tmp == categories)
+      category->is_primary = 1;
+
+    /* Add this application to the list of applications this category
+     * is referenced by */
+    g_object_ref(G_OBJECT(entry));
+    category->applications = g_list_prepend(category->applications, 
+					    G_OBJECT(entry));
+
+    printf("%s ", *tmp);
+
+    tmp++;
+  }
+  printf("\n");
+  g_strfreev(categories);
+
+  /* Free the storage for the key_file */
+  g_key_file_free(key_file);
 
   return TRUE;
 }
@@ -420,5 +436,11 @@ gchar *genesis_app_entry_get_category (GenesisAppEntry *entry)
 {
   GenesisAppEntryPrivate *priv = GENESIS_APP_ENTRY_GET_PRIVATE (entry);
 
-  return priv->category;
+  return priv->categories->data;
+}
+
+GList *genesis_app_entry_get_categories (GenesisAppEntry *entry)
+{
+  GenesisAppEntryPrivate *priv = GENESIS_APP_ENTRY_GET_PRIVATE (entry);
+  return g_list_copy(priv->categories);
 }

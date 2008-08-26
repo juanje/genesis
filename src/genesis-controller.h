@@ -24,6 +24,21 @@
 
 G_BEGIN_DECLS
 
+
+/**
+ * GenesisCategory:
+ * @applications: GList of GenesisAppEntry entries in this category
+ * @name: Locally allocated gchar name of category.
+ * @is_primary: Set to True if any applications list this as their primary
+ *              category.
+ */
+typedef struct _GenesisCategory {
+  /*< public >*/
+  GList *applications;
+  gchar *name;
+  gboolean is_primary;
+} GenesisCategory;
+
 typedef struct _GenesisController GenesisController;
 typedef struct _GenesisControllerClass GenesisControllerClass;
 typedef struct _GenesisControllerPrivate GenesisControllerPrivate;
@@ -56,7 +71,9 @@ GenesisAppEntry *genesis_controller_get_nth_entry (GenesisController *controller
 GenesisAppEntry *genesis_controller_get_entry_by_name (GenesisController *controller, gchar* name);
 void genesis_controller_remove_entry (GenesisController *controller, GenesisAppEntry *entry);
 GList* genesis_controller_get_categories (GenesisController *controller);
+GList* genesis_controller_get_all_applications (GenesisController *controller);
 GList* genesis_controller_get_applications_by_category (GenesisController *controller, const gchar *name);
+GList* genesis_controller_get_all_categories (GenesisController *controller);
 
 G_END_DECLS
 

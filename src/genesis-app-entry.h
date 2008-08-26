@@ -61,6 +61,20 @@ gchar *genesis_app_entry_get_exec (GenesisAppEntry *entry);
 gboolean genesis_app_entry_is_showup (GenesisAppEntry *entry);
 gchar *genesis_app_entry_get_category (GenesisAppEntry *entry);
 
+/**
+ * genesis_app_entry_get_categories:
+ * @entry Application entry to return the list of categories
+ *
+ * Obtain the list of all categories listed by this application entry.
+ * The first first element in the list is the primary category.
+ * Each element in the list points to a gchar string.
+ *  
+ * DO NOT FREE OR MODIFY STRING STORAGE!
+ *
+ * Returns: GList - free with g_list_free.  Do not free GList->data.
+ */
+GList *genesis_app_entry_get_categories (GenesisAppEntry *entry);
+
 G_END_DECLS
 
 #endif /* GENESIS_APP_ENTRY_H */
