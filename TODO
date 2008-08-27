@@ -1,0 +1,9 @@
+Todo List:
+
+* Back-end daemon initializing controller instance, and supporting automatic application list update when any application is installed / removed / updated.
+
+* Application crash and hang-up detection, system resource starving detection / quota enforcement.
+
+* Optimization on application entry metadata structure, reducing memory footprint.
+
+* Gracefully acquiring and managing metadata from non-freedesktop aligned applications. 

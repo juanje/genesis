@@ -1,0 +1,22 @@
+To build up and install genesis, following library are required as dependencies.
+
+	libxml2
+	libwnck
+	glib2
+	gtk2
+	
+also genesis uses autotools to automatically generate configure and Makefile files. autotools has to be installed in advance.
+
+	automake
+	libtool
+	autoconf
+
+Building up and installing genesis.
+
+	% ./autogen.sh --prefix=/usr
+	% make
+	% sudo make install
+
+A test application is included in the package, called app_entry_test, to verify genesis interface by reading through /usr/share/applications/*.desktop and list out content in each desktop file. To run the test application, after genesis is installed, simply run app_entry_test.
+
+	% app_entry_test

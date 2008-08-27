@@ -1,0 +1,14 @@
+Genesis : Application Life-cycle Manager 
+Copyright (C) 2008 Intel Corporation
+
+http://test.moblin.org/projects/genesis-application-lifecycle-manager
+
+Application life-cycle manager, codename Genesis, is part of the Moblin application framework, exposing interface for application developers to conveniently access application information, starting an application by calling a single API, and processing various run-time statuses for each running application.
+
+It also maintains the application list for the applications that are installed in the system, and updates the list whenever a change happens in the monitored applications.
+
+The purpose of the application life cycle management project, codename Genesis, is two fold:
+
+1. Provide a set of utility functions for applications on the platform to quickly and easily walk through the desktop files on a standard Linux system to expose applications and their categories. 
+
+2. Provide a mechanism for launching applications and tracking the execution of those applications to watch for resource starvation, hangs, unresponsiveness, etc.
