@@ -45,6 +45,11 @@ struct _GenesisFSMonitorPrivate
 
 static GList *monitored_list;
 
+static void genesis_fs_monitor_updated_callback (GenesisFSMonitor *monitor, gchar *path, GenesisWatchNode *node, guint event_type, gpointer user_data)
+{
+  node->callback (monitor, path, event_type, node->data);
+}
+
 static GenesisWatchNode *genesis_fs_monitor_get_node_by_wd (gint watch_descriptor)
 {
   GList *iter;
@@ -60,29 +65,11 @@ static GenesisWatchNode *genesis_fs_monitor_get_node_by_wd (gint watch_descripto
   return NULL;
 }
 
-#if 0
-static void genesis_fs_monitor_remove_by_path (const gchar* path)
-{
-  GList *iter;
-
-  for (iter = monitored_list; iter; iter = g_list_next (iter))
-  {
-    GenesisWatchNode *node = (GenesisWatchNode *) iter->data;
-    if (!g_ascii_strcasecmp (node->path, path))
-    {
-      monitored_list = g_list_remove (monitored_list, node);
-      free (node);
-      return;
-    }
-  }
-}
-#endif
-
 static struct inotify_event* genesis_fs_monitor_get_next_event (GenesisFSMonitor *monitor)
 {
   GenesisFSMonitorPrivate *priv = GENESIS_FS_MONITOR_GET_PRIVATE (monitor);
   static fd_set set;
-  static guint read_out_bytes;
+  guint read_out_bytes;
   gint ret;
 
   FD_ZERO(&set);
@@ -132,14 +119,17 @@ static gpointer genesis_fs_monitor_main_thread (gpointer data)
       case IN_MODIFY:
       case IN_CREATE:
       case IN_MOVED_TO:
-        node->callback (monitor, g_build_filename (node->path, ret_event->name, NULL), EVENT_CREATED, node->data);
+        save_log ("IN_MODIFY | IN_CREATE | IN_MOVED_TO :: ret_event->mask is %d\n", ret_event->mask);
+        g_signal_emit_by_name (monitor, "directory-updated", g_build_filename (node->path, ret_event->name, NULL), node, EVENT_CREATED);
         break;
       case IN_MOVED_FROM:
       case IN_DELETE:
-        node->callback (monitor, g_build_filename (node->path, ret_event->name, NULL), EVENT_REMOVED, node->data);   
+        save_log ("IN_MOVED_FROM | IN_DELETE :: ret_event->mask is %d\n", ret_event->mask);
+        g_signal_emit_by_name (monitor, "directory-updated", g_build_filename (node->path, ret_event->name, NULL), node, EVENT_REMOVED);
         break;
       case IN_CLOSE_WRITE:
-        node->callback (monitor, g_build_filename (node->path, ret_event->name, NULL), EVENT_MODIFIED, node->data);
+        save_log ("IN_CLOSE_WRITE :: ret_event->mask is %d\n", ret_event->mask);
+        g_signal_emit_by_name (monitor, "directory-updated", g_build_filename (node->path, ret_event->name, NULL), node, EVENT_MODIFIED);
         break;
       default:
         break;
@@ -165,14 +155,20 @@ static void genesis_fs_monitor_class_init (GenesisFSMonitorClass *klass)
   g_type_class_add_private (klass, sizeof (GenesisFSMonitorPrivate));
 
   object_class->finalize = genesis_fs_monitor_finalize;
+
+  g_signal_new ("directory-updated",
+                G_OBJECT_CLASS_TYPE(object_class),
+                G_SIGNAL_RUN_LAST, 0,
+                NULL, NULL,
+                g_cclosure_user_marshal_VOID__POINTER_POINTER_UINT,
+                G_TYPE_NONE,
+                3,
+                G_TYPE_POINTER, G_TYPE_POINTER, G_TYPE_UINT);
 }
 
 static void genesis_fs_monitor_init (GenesisFSMonitor *self)
 {
   GenesisFSMonitorPrivate *priv = GENESIS_FS_MONITOR_GET_PRIVATE (self);
-
-  if (!g_thread_supported ()) 
-    g_thread_init (NULL);
 
   priv->inotify_handle = inotify_init ();
   monitored_list = NULL;
@@ -242,5 +238,7 @@ void genesis_fs_monitor_add (GenesisFSMonitor *monitor, const gchar *path, gint 
                              GenesisFSMonitorCallback callback, gpointer data)
 {
   monitored_list = genesis_fs_monitor_add_recursively (monitor, path, events, callback, data);
+
+  g_signal_connect (G_OBJECT (monitor), "directory-updated", G_CALLBACK (genesis_fs_monitor_updated_callback), NULL);
 }
 

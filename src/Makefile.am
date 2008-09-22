@@ -40,4 +40,16 @@ libgenesis_la_SOURCES = $(BUILT_SOURCES)     \
                         genesis-app-entry.c  \
                         genesis-controller.c
 
+bin_PROGRAMS = genesisd
+genesisd_CPPFLAGS = $(INCLUDES)
+
+genesisd_LDFLAGS = $(GLIB_LIBS)     \
+                   $(GTK_LIBS)      \
+                   $(LIBXML_LIBS)   \
+                   $(LIBWNCK_LIBS)
+
+genesisd_LDADD = /usr/lib/libgenesis.so
+
+genesisd_SOURCES = genesis-daemon.c
+
 CLEANFILES = $(BUILT_SOURCES) *~ *.la *.o *.so *.lo *.loT *.pc

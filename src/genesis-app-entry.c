@@ -196,7 +196,7 @@ gboolean genesis_app_entry_extract_info (GenesisAppEntry *entry, GHashTable *has
     return FALSE;
   }
 
-  key_file = g_key_file_new();
+  key_file = g_key_file_new ();
   if (g_key_file_load_from_file (key_file, priv->filename, G_KEY_FILE_NONE, NULL) == FALSE)
   {
     g_warning ("Error reading '%s', exit.\n", priv->filename);
@@ -309,7 +309,8 @@ gboolean genesis_app_entry_extract_info (GenesisAppEntry *entry, GHashTable *has
   g_strfreev(categories);
 
   /* Free the storage for the key_file */
-  g_key_file_free(key_file);
+  if (key_file)
+    g_key_file_free (key_file);
 
   return TRUE;
 }

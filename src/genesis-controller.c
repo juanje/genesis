@@ -21,12 +21,6 @@
 
 #include "genesis-common.h"
 
-#define DESKTOP_FILE_SUFFIX         ".desktop"
-#define DESKTOP_DIR                 "/usr/share/applications"
-
-#define APPLICATIONS_MENU           "/etc/xdg/menus/applications.menu"
-#define PREFERENCES_MENU            "/etc/xdg/menus/preferences.menu"
-
 #define GENESIS_CONTROLLER_GET_PRIVATE(object) \
         (G_TYPE_INSTANCE_GET_PRIVATE ((object), GENESIS_TYPE_CONTROLLER, GenesisControllerPrivate))
 
@@ -47,117 +41,7 @@ struct _GenesisControllerPrivate
 {
   GHashTable *categories;
   GList *applications;
-//  GenesisFSMonitor  *monitor;
 };
-#if 0
-static gboolean applications_list_updated (GenesisFSMonitor *monitor, const gchar *path, 
-                                           GenesisFSMonitorEventType type, gpointer data)
-{
-  GenesisController *self = GENESIS_CONTROLLER (data);
-  GenesisControllerPrivate *priv = GENESIS_CONTROLLER_GET_PRIVATE (self);
-  GenesisAppEntry *entry = NULL;
-  gchar *desktop_entry = NULL;
-  gchar *nth_desktop_entry = NULL;
-  guint n = 0;
-
-  if (!g_str_has_suffix (path, DESKTOP_FILE_SUFFIX))
-    return FALSE;
-
-  desktop_entry = g_strdup (path);
-  switch (type)
-  {
-    case EVENT_MODIFIED:
-    case EVENT_REMOVED:
-      do
-      {
-        entry = genesis_controller_get_nth_entry (self, n);
-        g_object_get (G_OBJECT(entry), "desktop_entry", &nth_desktop_entry, NULL);
-
-        if (!g_ascii_strcasecmp (nth_desktop_entry, desktop_entry))
-        {
-          genesis_controller_remove_entry (self, entry);
-          g_free (nth_desktop_entry);
-
-          if (EVENT_REMOVED == type)
-          {
-            g_signal_emit_by_name (self, "app-entry-updated", type, desktop_entry);
-            goto Exit;
-          }
-          else if (EVENT_MODIFIED == type)
-            break;
-        }
-
-        n++;
-      }while (entry);
-
-      if (EVENT_REMOVED == type)
-        break;
-    case EVENT_CREATED:
-      entry = g_object_new (GENESIS_TYPE_APP_ENTRY, "desktop_entry", desktop_entry, NULL);
-
-      /* Extract the information for this entry from its desktop file and
-       * populate the GenesisAppEntry fields, as well as adding to the
-       * GenesisCategory hash table. */
-      if (genesis_app_entry_extract_info(entry, priv->categories))
-        priv->applications = g_list_append (priv->applications, entry);
-
-      g_signal_emit_by_name (self, "app-entry-updated", type, desktop_entry);
-      break;
-    default:
-      break;
-  }
-
-Exit:
-  if (desktop_entry)
-    g_free (desktop_entry);
-
-  return TRUE;
-}
-#endif
-static GHashTable *genesis_controller_parse_menu (GenesisController *self, xmlNode *list)
-{
-  GenesisControllerPrivate *priv = GENESIS_CONTROLLER_GET_PRIVATE (self);
-  xmlNode *node, *iter = NULL;
-  gchar *name = NULL, *category = NULL;
-
-  for (node = list->children; node != NULL; node = node->next )
-  {
-    if (!strcmp ((gchar *)node->name, "Menu"))
-      priv->categories = genesis_controller_parse_menu (self, node);
-    else if (!strcmp ((gchar *)node->name, "Name"))
-      name = g_strdup ((gchar *)node->last->content);
-    else if (!strcmp ((gchar *)node->name, "Include"))
-    {
-      for (iter = ((node->children)->next)->children; iter != NULL; iter = iter->next)
-      {
-        if (strcmp ((gchar *)iter->name, "Category"))
-          continue;
-        category = g_strdup ((gchar *)iter->last->content);
-      }
-    }
-  }
-
-  if (name && category)
-    g_hash_table_replace (priv->categories, category, name);
-
-  return priv->categories;
-}
-
-#if 0
-static GHashTable *genesis_controller_append_categories (GenesisController *self, const gchar *menu)
-{
-  xmlDoc *doc = NULL;
-  xmlNode *root = NULL;
-
-  doc = xmlParseFile (menu);
-  root = xmlDocGetRootElement (doc);
-
-  if (NULL == root)
-    return NULL;
-
-  return genesis_controller_parse_menu (self, root);
-}
-#endif
 
 static GList *genesis_controller_append_applications (GenesisController *self)
 {
@@ -241,15 +125,8 @@ static void genesis_controller_init (GenesisController *self)
 
   priv->categories = g_hash_table_new_full(
     g_str_hash, g_str_equal, NULL, (GDestroyNotify)genesis_category_destroy); 
-/*
-  priv->categories = genesis_controller_append_categories (self, APPLICATIONS_MENU);
-  priv->categories = genesis_controller_append_categories (self, PREFERENCES_MENU);
-*/
+
   priv->applications = genesis_controller_append_applications (self);
-#if 0
-  priv->monitor = genesis_fs_monitor_get_singleton ();
-  genesis_fs_monitor_add (priv->monitor, DESKTOP_DIR, IN_ALL_EVENTS, applications_list_updated, self);
-#endif
 }
 
 /* Public Functions */
@@ -337,6 +214,25 @@ void genesis_controller_remove_entry (GenesisController *controller, GenesisAppE
 
   if (priv->applications)
     priv->applications = g_list_remove (priv->applications, entry);
+}
+
+void genesis_controller_add_entry (GenesisController *controller, GenesisAppEntry *entry)
+{
+  GenesisControllerPrivate *priv = GENESIS_CONTROLLER_GET_PRIVATE (controller);
+
+  if (genesis_app_entry_extract_info (entry, priv->categories))
+    priv->applications = g_list_append (priv->applications, entry);
+}
+
+void genesis_controller_add_entry_by_path (GenesisController *controller, const gchar *path)
+{
+  GenesisAppEntry *entry = NULL;
+  gchar *desktop_entry = NULL;
+
+  desktop_entry = g_strdup (path);
+  entry = g_object_new (GENESIS_TYPE_APP_ENTRY, "desktop_entry", desktop_entry, NULL);
+
+  genesis_controller_add_entry (controller, entry);
 }
 
 GList* genesis_controller_get_categories (GenesisController *controller)

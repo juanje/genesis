@@ -34,3 +34,19 @@ gchar* path_to_uri (gchar *path)
 {
   return g_strconcat ("file://", path, NULL);
 }
+
+void save_log (const gchar *format, ...)
+{
+  FILE* log_file = NULL;
+  va_list args;
+
+  if (!log_file)
+    log_file = fopen (g_build_filename (g_get_home_dir (), "genesisd.log", NULL), "a+");
+
+  va_start (args, format);
+  fprintf (log_file, format, args);
+  va_end (args);
+
+  fclose (log_file);
+}
+

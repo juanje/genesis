@@ -26,6 +26,7 @@ G_BEGIN_DECLS
 
 gchar* uri_to_path (const gchar *uri);
 gchar* path_to_uri (gchar *path);
+void save_log (const gchar *format, ...);
 
 G_END_DECLS
 
