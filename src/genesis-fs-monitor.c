@@ -83,9 +83,9 @@ static struct inotify_event* genesis_fs_monitor_get_next_event (GenesisFSMonitor
     ret = ioctl (priv->inotify_handle, FIONREAD, &read_out_bytes);
     if (ret == 0)
       break;
-  } while (read_out_bytes < sizeof (struct inotify_event));
+  } while (!ret && read_out_bytes < sizeof (struct inotify_event));
 
-  if (ret <= 0)
+  if (-1 == ret)
     return NULL;
 
   read_out_bytes = read (priv->inotify_handle, &priv->event[0], sizeof(struct inotify_event)*MAXIMUM_NUMBER);
