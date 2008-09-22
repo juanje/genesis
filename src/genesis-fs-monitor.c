@@ -21,7 +21,7 @@
 
 #include "genesis-common.h"
 
-#define MAXIMUM_NUMBER 2048
+#define MAXIMUM_NUMBER 4096
 
 #define GENESIS_FS_MONITOR_GET_PRIVATE(object) \
         (G_TYPE_INSTANCE_GET_PRIVATE ((object), GENESIS_TYPE_FS_MONITOR, GenesisFSMonitorPrivate))

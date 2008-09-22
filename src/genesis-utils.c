@@ -41,7 +41,7 @@ void save_log (const gchar *format, ...)
   va_list args;
 
   if (!log_file)
-    log_file = fopen (g_build_filename (g_get_home_dir (), "genesisd.log", NULL), "a+");
+    log_file = fopen (g_build_filename (g_get_home_dir (), ".genesisd.log", NULL), "a+");
 
   va_start (args, format);
   fprintf (log_file, format, args);
