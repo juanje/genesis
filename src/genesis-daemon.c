@@ -132,7 +132,6 @@ int main (int argc, char **argv)
 {
   GenesisDaemon *daemon = NULL;
   GMainLoop *loop;
-#if 0
   pid_t pid, sid;
 
   pid = fork ();
@@ -160,7 +159,7 @@ int main (int argc, char **argv)
   close (STDIN_FILENO);
   close (STDOUT_FILENO);
   close (STDERR_FILENO);
-#endif
+
   gtk_init (&argc, &argv);
 
   if (!g_thread_supported ())
