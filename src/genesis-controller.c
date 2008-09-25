@@ -33,20 +33,6 @@ enum
 };
 
 /**
- * GenesisCategory:
- * @applications: GList of GenesisAppEntry entries in this category
- * @name: Locally allocated gchar name of category.
- * @is_primary: Set to True if any applications list this as their primary
- *              category.
- */
-struct _GenesisCategory {
-  /*< public >*/
-  GList *applications;
-  gchar *name;
-  gboolean is_primary;
-};
-
-/**
  * _GenesisControllerPrivate:
  * @categories: Hash table of GenesisCategory elements
  * @applications: GList of GenesisAppEntry elements

@@ -27,7 +27,20 @@ G_BEGIN_DECLS
 #define DESKTOP_FILE_SUFFIX         ".desktop"
 #define DESKTOP_DIR                 "/usr/share/applications/"
 
-typedef struct _GenesisCategory GenesisCategory;
+/**
+ * GenesisCategory:
+ * @applications: GList of GenesisAppEntry entries in this category
+ * @name: Locally allocated gchar name of category.
+ * @is_primary: Set to True if any applications list this as their primary
+ *              category.
+ */
+typedef struct _GenesisCategory {
+  /*< public >*/
+  GList *applications;
+  gchar *name;
+  gboolean is_primary;
+} GenesisCategory;
+
 typedef struct _GenesisController GenesisController;
 typedef struct _GenesisControllerClass GenesisControllerClass;
 typedef struct _GenesisControllerPrivate GenesisControllerPrivate;
