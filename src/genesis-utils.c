@@ -19,7 +19,10 @@
  *
  */
 
-#include "genesis-common.h"
+#include <glib.h>
+#include <glib/gstdio.h>
+
+#include "genesis-utils.h"
 
 gchar* uri_to_path (const gchar *uri)
 {
@@ -35,6 +38,7 @@ gchar* path_to_uri (gchar *path)
   return g_strconcat ("file://", path, NULL);
 }
 
+#ifndef NODAEMON
 void save_log (const gchar *format, ...)
 {
   FILE* log_file = NULL;
@@ -49,4 +53,4 @@ void save_log (const gchar *format, ...)
 
   fclose (log_file);
 }
-
+#endif

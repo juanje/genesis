@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2008 Intel Corporation
  *
- * Author:  Horace Li <horace.li@intel.com>
+ * Author:  Raymond Liu <raymond.liu@intel.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -21,31 +21,106 @@
 
 #include "genesis-common.h"
 
-#define GENESIS_CONTROLLER_GET_PRIVATE(object) \
-        (G_TYPE_INSTANCE_GET_PRIVATE ((object), GENESIS_TYPE_CONTROLLER, GenesisControllerPrivate))
+#include "genesis-dbus-common.h"
+#include "genesis-dbus-proxy-glue.h"
 
-G_DEFINE_TYPE (GenesisController, genesis_controller, G_TYPE_OBJECT)
+#include "genesis-proxy.h"
+
+
+#define GENESIS_PROXY_GET_PRIVATE(object) \
+        (G_TYPE_INSTANCE_GET_PRIVATE ((object), GENESIS_TYPE_PROXY, GenesisProxyPrivate))
+
+G_DEFINE_TYPE (GenesisProxy, genesis_proxy, G_TYPE_OBJECT)
+
+/**
+ * _GenesisProxyPrivate:
+ */
+struct _GenesisProxyPrivate
+{
+	DBusGProxy* dbusproxy;
+};
+
+static void genesis_proxy_class_init (GenesisProxyClass *klass)
+{
+	g_type_class_add_private (klass, sizeof (GenesisProxyPrivate));
+}
+
+static void genesis_proxy_init (GenesisProxy *self)
+{
+
+	DBusGConnection* bus;
+	DBusGProxy* dbusproxy;
+	GError* error = NULL;
+
+	GenesisProxyPrivate *priv = GENESIS_PROXY_GET_PRIVATE (self);
+
+ 
+	bus = dbus_g_bus_get(DBUS_BUS_SESSION, &error);
+
+	if (error != NULL) {
+		g_error(error->message);
+	}
+
+	dbusproxy = dbus_g_proxy_new_for_name(bus,
+                              GENESIS_DBUSOBJ_SERVICE_NAME, /* name */
+                              GENESIS_DBUSOBJ_SERVICE_OBJECT_PATH, /* obj path */
+                              GENESIS_DBUSOBJ_SERVICE_INTERFACE /* interface */);
+	if (dbusproxy == NULL) {
+		g_error("could not create dbus_proxy for %s \n", GENESIS_DBUSOBJ_SERVICE_NAME);
+	}
+
+	priv->dbusproxy = dbusproxy;
+}
+
+
+/* Public Functions */
+
+GenesisProxy *genesis_proxy_get_singleton (void)
+{
+	static GenesisProxy *proxy = NULL;
+	if (!proxy)
+		proxy = g_object_new (GENESIS_TYPE_PROXY, NULL);
+	return proxy;
+}
+
+
+void genesis_proxy_hello (GenesisProxy *proxy, gchar * name)
+{
+	GenesisProxyPrivate *priv;
+	GError* error = NULL;
+	
+	g_return_if_fail(IS_GENESIS_PROXY(proxy));
+	proxy = GENESIS_PROXY(proxy);
+
+	priv = GENESIS_PROXY_GET_PRIVATE (proxy);
+
+	org_moblin_genesis_hello(priv->dbusproxy, name, &error);
+	if (error != NULL) {
+		g_error("%s, seems proxy not working right", error->message);
+	}
+	
+}
+
+
+/* ------------------ the following is net yet used, just collect here -----------------------------*/
+#ifdef NO_THIS_MACRO
+
 
 enum
 {
-  APPLICATIONS_LIST_CHANGED,
-  N_SIGNALS
+	APPLICATIONS_LIST_CHANGED,
+	N_SIGNALS
 };
 
-/**
- * _GenesisControllerPrivate:
- * @categories: Hash table of GenesisCategory elements
- * @applications: GList of GenesisAppEntry elements
- */
-struct _GenesisControllerPrivate
+static void genesis_proxy_finalize (GObject *object)
 {
-  GHashTable *categories;
-  GList *applications;
-};
+	GenesisProxy *self = GENESIS_PROXY (object);
+	GenesisProxyPrivate *priv = GENESIS_PROXY_GET_PRIVATE (self);
+}
 
-static GList *genesis_controller_append_applications (GenesisController *self)
+static GList *genesis_proxy_append_applications (GenesisProxy *self)
 {
-  GenesisControllerPrivate *priv = GENESIS_CONTROLLER_GET_PRIVATE (self);
+  GenesisProxyPrivate *priv = GENESIS_PROXY_GET_PRIVATE (self);
   DIR *dir_handle = NULL;
   struct dirent *d = NULL;
   struct stat buf;
@@ -76,37 +151,6 @@ static GList *genesis_controller_append_applications (GenesisController *self)
   return priv->applications;
 }
 
-static void genesis_controller_finalize (GObject *object)
-{
-  GenesisController *self = GENESIS_CONTROLLER (object);
-  GenesisControllerPrivate *priv = GENESIS_CONTROLLER_GET_PRIVATE (self);
-
-  if (priv->categories)
-    g_free (priv->categories);
-
-  if (priv->applications)
-    g_free (priv->applications);
-}
-
-static void genesis_controller_class_init (GenesisControllerClass *klass)
-{
-  GObjectClass *object_class = G_OBJECT_CLASS (klass);
-
-  save_log("enter %s\n",__func__);
-
-  g_type_class_add_private (klass, sizeof (GenesisControllerPrivate));
-
-  object_class->finalize = genesis_controller_finalize;
-
-  g_signal_new ("app-entry-updated",
-                G_OBJECT_CLASS_TYPE(object_class),
-                G_SIGNAL_RUN_LAST, 0,
-                NULL, NULL,
-                g_cclosure_user_marshal_VOID__UINT_POINTER,
-                G_TYPE_NONE,
-                2,
-                G_TYPE_UINT, G_TYPE_POINTER);
-}
 
 static void genesis_category_destroy(GenesisCategory *category)
 {
@@ -121,30 +165,12 @@ static void genesis_category_destroy(GenesisCategory *category)
   
 }
 
-static void genesis_controller_init (GenesisController *self)
+
+
+
+gboolean genesis_proxy_start_app_from_path (GenesisProxy *proxy, gchar *path)
 {
-  GenesisControllerPrivate *priv = GENESIS_CONTROLLER_GET_PRIVATE (self);
-
-  priv->categories = g_hash_table_new_full(
-    g_str_hash, g_str_equal, NULL, (GDestroyNotify)genesis_category_destroy); 
-
-  priv->applications = genesis_controller_append_applications (self);
-}
-
-/* Public Functions */
-
-GenesisController *genesis_controller_get_singleton (void)
-{
-  static GenesisController *controller = NULL;
-  if (!controller)
-    controller = g_object_new (GENESIS_TYPE_CONTROLLER, NULL);
-  save_log("leave\n");
-  return controller;
-}
-
-gboolean genesis_controller_start_app_from_path (GenesisController *controller, gchar *path)
-{
-  GenesisControllerPrivate *priv = GENESIS_CONTROLLER_GET_PRIVATE (controller);
+  GenesisProxyPrivate *priv = GENESIS_PROXY_GET_PRIVATE (proxy);
   GenesisAppEntry *entry = g_object_new (GENESIS_TYPE_APP_ENTRY, NULL);
 
   genesis_app_entry_set_exec (entry, path);
@@ -156,10 +182,10 @@ gboolean genesis_controller_start_app_from_path (GenesisController *controller, 
   return TRUE;
 }
 
-gboolean genesis_controller_start_app_from_name (GenesisController *controller, 
+gboolean genesis_proxy_start_app_from_name (GenesisProxy *proxy, 
 						 gchar* name)
 {
-  GenesisControllerPrivate *priv = GENESIS_CONTROLLER_GET_PRIVATE (controller);
+  GenesisProxyPrivate *priv = GENESIS_PROXY_GET_PRIVATE (proxy);
   GList *tmp = priv->applications;
 
   while (tmp) {
@@ -179,20 +205,26 @@ gboolean genesis_controller_start_app_from_name (GenesisController *controller,
   return FALSE;
 }
 
-GenesisAppEntry *genesis_controller_get_nth_entry (GenesisController *controller, guint n)
+GenesisAppEntry *genesis_proxy_get_nth_entry (GenesisProxy *proxy, guint n)
 {
-  GenesisControllerPrivate *priv = GENESIS_CONTROLLER_GET_PRIVATE (controller);
+  GenesisProxy *proxy;
+  GenesisProxyPrivate *priv;
   GenesisAppEntry *entry = NULL;  
 
+  g_return_if_fail(IS_GENESIS_PROXY(proxy));
+  proxy= GENESIS_PROXY(proxy);
+
+  priv = GENESIS_PROXY_GET_PRIVATE (proxy);
+  
   if (priv->applications)
     entry = GENESIS_APP_ENTRY (g_list_nth_data (priv->applications, n));
 
   return entry;
 }
 
-GenesisAppEntry *genesis_controller_get_entry_by_name (GenesisController *controller, gchar* name)
+GenesisAppEntry *genesis_proxy_get_entry_by_name (GenesisProxy *proxy, gchar* name)
 {
-  GenesisControllerPrivate *priv = GENESIS_CONTROLLER_GET_PRIVATE (controller);
+  GenesisProxyPrivate *priv = GENESIS_PROXY_GET_PRIVATE (proxy);
   GList *tmp = priv->applications;
 
   while (tmp)
@@ -209,23 +241,23 @@ GenesisAppEntry *genesis_controller_get_entry_by_name (GenesisController *contro
   return NULL;
 }
 
-void genesis_controller_remove_entry (GenesisController *controller, GenesisAppEntry *entry)
+void genesis_proxy_remove_entry (GenesisProxy *proxy, GenesisAppEntry *entry)
 {
-  GenesisControllerPrivate *priv = GENESIS_CONTROLLER_GET_PRIVATE (controller);
+  GenesisProxyPrivate *priv = GENESIS_PROXY_GET_PRIVATE (proxy);
 
   if (priv->applications)
     priv->applications = g_list_remove (priv->applications, entry);
 }
 
-void genesis_controller_add_entry (GenesisController *controller, GenesisAppEntry *entry)
+void genesis_proxy_add_entry (GenesisProxy *proxy, GenesisAppEntry *entry)
 {
-  GenesisControllerPrivate *priv = GENESIS_CONTROLLER_GET_PRIVATE (controller);
+  GenesisProxyPrivate *priv = GENESIS_PROXY_GET_PRIVATE (proxy);
 
   if (genesis_app_entry_extract_info (entry, priv->categories))
     priv->applications = g_list_append (priv->applications, entry);
 }
 
-void genesis_controller_add_entry_by_path (GenesisController *controller, const gchar *path)
+void genesis_proxy_add_entry_by_path (GenesisProxy *proxy, const gchar *path)
 {
   GenesisAppEntry *entry = NULL;
   gchar *desktop_entry = NULL;
@@ -233,12 +265,12 @@ void genesis_controller_add_entry_by_path (GenesisController *controller, const 
   desktop_entry = g_strdup (path);
   entry = g_object_new (GENESIS_TYPE_APP_ENTRY, "desktop_entry", desktop_entry, NULL);
 
-  genesis_controller_add_entry (controller, entry);
+  genesis_proxy_add_entry (proxy, entry);
 }
 
-GList* genesis_controller_get_categories (GenesisController *controller)
+GList* genesis_proxy_get_categories (GenesisProxy *proxy)
 {
-  GenesisControllerPrivate *priv = GENESIS_CONTROLLER_GET_PRIVATE (controller);
+  GenesisProxyPrivate *priv = GENESIS_PROXY_GET_PRIVATE (proxy);
   GList *categories;
   GList *tmp;
   GList *results = NULL;
@@ -263,9 +295,9 @@ GList* genesis_controller_get_categories (GenesisController *controller)
 }
 
 
-GList* genesis_controller_get_all_categories (GenesisController *controller)
+GList* genesis_proxy_get_all_categories (GenesisProxy *proxy)
 {
-  GenesisControllerPrivate *priv = GENESIS_CONTROLLER_GET_PRIVATE (controller);
+  GenesisProxyPrivate *priv = GENESIS_PROXY_GET_PRIVATE (proxy);
 
   if (!priv->categories)
     return NULL;
@@ -274,17 +306,22 @@ GList* genesis_controller_get_all_categories (GenesisController *controller)
 }
 
 
-GList* genesis_controller_get_applications_by_category (GenesisController *controller, const gchar *name)
+GList* genesis_proxy_get_applications_by_category (GenesisProxy *proxy, const gchar *name)
 {
-  GenesisControllerPrivate *priv = GENESIS_CONTROLLER_GET_PRIVATE (controller);
+  GenesisProxyPrivate *priv = GENESIS_PROXY_GET_PRIVATE (proxy);
   GenesisCategory *category = g_hash_table_lookup (priv->categories, name);
   if (!category)
     return NULL;
   return g_list_copy(category->applications);
 }
 
-GList* genesis_controller_get_all_applications (GenesisController *controller)
+GList* genesis_proxy_get_all_applications (GenesisProxy *proxy)
 {
-  GenesisControllerPrivate *priv = GENESIS_CONTROLLER_GET_PRIVATE (controller);
+  GenesisProxyPrivate *priv = GENESIS_PROXY_GET_PRIVATE (proxy);
   return g_list_copy(priv->applications);
 }
+
+
+#endif
+
+

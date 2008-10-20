@@ -20,6 +20,7 @@
  */
 
 #include "genesis-common.h"
+#include "genesis-daemon-dbus.h"
 
 typedef struct _GenesisDaemon
 {
@@ -105,7 +106,10 @@ static void genesis_daemon_init (GenesisDaemon *daemon)
 {
   GenesisController *controller = NULL;
   GenesisFSMonitor *monitor = NULL;
+  GenesisDbusObj *dbusobj = NULL;
 
+
+  save_log("enter genesis_daemon_init \n");
   controller = genesis_controller_get_singleton ();
 
   if (!controller)
@@ -113,6 +117,7 @@ static void genesis_daemon_init (GenesisDaemon *daemon)
     save_log ("no controller singleton returned\n");
     exit (EXIT_FAILURE);
   }
+  save_log ("controller singleton geted\n");
 
   monitor = genesis_fs_monitor_get_singleton ();
 
@@ -121,19 +126,25 @@ static void genesis_daemon_init (GenesisDaemon *daemon)
     save_log ("no monitor singleton returned\n");
     exit (EXIT_FAILURE);
   }
+  save_log ("monitor singleton geted\n");
 
   genesis_fs_monitor_add (monitor, DESKTOP_DIR, IN_ALL_EVENTS, applications_list_updated, controller);
 
   daemon->controller = controller;
   daemon->monitor = monitor;
+
+  dbusobj = genesis_dbus_daemon_init();
+  
 }
 
 int main (int argc, char **argv)
 {
   GenesisDaemon *daemon = NULL;
   GMainLoop *loop;
-  pid_t pid, sid;
 
+#ifndef NODAEMON
+  pid_t pid, sid;
+  
   pid = fork ();
   if (pid > 0)
     exit (EXIT_SUCCESS);
@@ -159,20 +170,29 @@ int main (int argc, char **argv)
   close (STDIN_FILENO);
   close (STDOUT_FILENO);
   close (STDERR_FILENO);
+#endif
 
-  gtk_init (&argc, &argv);
+  //g_type_init ();
+  gtk_init(&argc, &argv);
 
   if (!g_thread_supported ())
     g_thread_init (NULL);
 
   daemon = g_new0 (GenesisDaemon, 1);
-  save_log ("in main, start to call genesis_daemon_init\n");
+
+  printf("in main, start to call genesis_daemon_init\n");
+
+  save_log("in main, start to call genesis_daemon_init\n");
+
   genesis_daemon_init (daemon);
 
+  save_log ("in main, after call genesis_daemon_init\n");
   loop = g_main_loop_new (NULL, FALSE);
 
   g_main_loop_run (loop);
 
+  save_log ("quit from main loop\n");
+  
   if (daemon)
     g_free (daemon);
 

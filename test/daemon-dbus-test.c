@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2008 Intel Corporation
  *
- * Author:  Horace Li <horace.li@intel.com>
+ * Author:  Raymond Liu <raymond.liu@intel.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -19,35 +19,35 @@
  *
  */
 
-#ifndef GENESIS_COMMON_H
-#define GENESIS_COMMON_H
+#include "genesis-common.h"
+#include "genesis-proxy.h"
 
-#include <dirent.h>
-#include <string.h>
-#include <errno.h>
-#include <sys/resource.h>
-#include <sys/stat.h>
-#include <sys/inotify.h>
-#include <sys/select.h>
-#include <sys/ioctl.h>
-#include <fcntl.h>
-#include <unistd.h>
+int main(int argc, char *argv[])
+{
+	GenesisProxy *proxy = NULL;
+//	GMainLoop* mainloop;
+//	GError* error = NULL;
 
-#include <glib.h>
-#include <glib/gstdio.h>
-#include <glib-object.h>
-#include <gtk/gtk.h>
-#include <gdk/gdkx.h>
-#include <libxml/parser.h>
-#define WNCK_I_KNOW_THIS_IS_UNSTABLE
-#include <libwnck/libwnck.h>
+	g_type_init ();
 
-#include "config.h"
+	proxy = genesis_proxy_get_singleton();
 
-#include "genesis-marshalers.h"
-#include "genesis-app-entry.h"
-#include "genesis-fs-monitor.h"
-#include "genesis-controller.h"
-#include "genesis-utils.h"
+	if (!proxy)
+	{
+		g_error ("Failed to get genesis proxy singleton.\n");
+	}
 
-#endif /* GENESIS_COMMON_H */
+	genesis_proxy_hello(proxy,"Daemon-dbus-test");
+
+#if 0
+	mainloop = g_main_loop_new(NULL, FALSE);
+
+	if (mainloop == NULL) {
+	 	g_error("Failed to create the mainloop\n");
+	}
+	
+	g_main_loop_run(mainloop);
+#endif
+
+  return 0;
+}

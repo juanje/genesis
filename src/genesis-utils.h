@@ -22,11 +22,25 @@
 #ifndef GENESIS_UTILS_H
 #define GENESIS_UTILS_H
 
+// FIXEME: just define NODAEMON for using g_print to print out the debug message
+// instead of save it to log file while we are not in daemon mode
+
+#define NODAEMON
+
 G_BEGIN_DECLS
 
 gchar* uri_to_path (const gchar *uri);
 gchar* path_to_uri (gchar *path);
+
+//void save_log (const gchar *format, ...);
+
+#ifndef NODAEMON
 void save_log (const gchar *format, ...);
+#else
+
+#define save_log(fmtstr, args...) (g_print("%s:" fmtstr "\n", __func__, ##args))
+
+#endif
 
 G_END_DECLS
 
