@@ -25,14 +25,39 @@
 #include "genesis-dbus-common.h"
 #include "genesis-utils.h"
 
+#include "genesis-daemon.h"
 #include "genesis-daemon-dbus.h"
 
 /* Utility macro to define the value_object GType structure. */
 G_DEFINE_TYPE( GenesisDbusObj, genesis_dbusobj, G_TYPE_OBJECT)
 
+gboolean genesis_dbusobj_hello
+	(GenesisDbusObj* obj, char * who, GError** error);
 
-gboolean genesis_dbusobj_hello(GenesisDbusObj* obj, char * who, GError** error);
-gboolean genesis_dbusobj_getname(GenesisDbusObj* obj, char ** name_out, GError** error);
+gboolean genesis_dbusobj_start_app_by_name
+	(GenesisDbusObj* obj, char * name, GError** error);
+
+gboolean genesis_dbusobj_get_nth_entry_name
+	(GenesisDbusObj* obj, gint index, char ** name, GError** error);
+
+gboolean genesis_dbusobj_get_category_names
+	(GenesisDbusObj* obj, char *** names, GError** error);
+
+gboolean genesis_dbusobj_get_entry_names_by_category
+	(GenesisDbusObj* obj, char *category, char *** names, GError** error);
+
+gboolean genesis_dbusobj_get_app_icon
+	(GenesisDbusObj* obj, char *name, char ** icon, GError** error);
+
+gboolean genesis_dbusobj_get_app_exec
+	(GenesisDbusObj* obj, char *name, char ** exec, GError** error);
+
+
+gboolean genesis_dbusobj_get_app_showup
+	(GenesisDbusObj* obj, char *name, gboolean* showup, GError** error);
+
+gboolean genesis_dbusobj_get_app_category_names
+	(GenesisDbusObj* obj, char *name, char *** names, GError** error);
 
 #include "genesis-daemon-dbus-glue.h"
 
@@ -73,29 +98,174 @@ static void genesis_dbusobj_class_init(GenesisDbusObjClass* klass) {
   /* All done. Class is ready to be used for instantiating objects */
 }
 
-
-
-gboolean genesis_dbusobj_getname(GenesisDbusObj* obj, char ** name_out, GError** error)
-{
-
-  save_log("Called \n");
-
-  g_assert(obj != NULL);
-
-  *name_out =  g_strdup("genesis");
-  return TRUE;
-
-}
-
 gboolean genesis_dbusobj_hello(GenesisDbusObj* obj, char * who, GError** error)
 {
 
-  save_log("hello %s", who);
+	g_return_val_if_fail(GENESIS_IS_DBUSOBJ(obj), FALSE);
+	obj = GENESIS_DBUSOBJ(obj);
+	
+	save_log("hello %s", who);
 
-  g_assert(obj != NULL);
+	return TRUE;
 
-  return TRUE;
+}
 
+gboolean genesis_dbusobj_start_app_by_name
+	(GenesisDbusObj* obj, char * name, GError** error)
+{
+	GenesisController* controller;
+	
+	g_return_val_if_fail(GENESIS_IS_DBUSOBJ(obj), FALSE);
+	obj = GENESIS_DBUSOBJ(obj);
+
+	controller = obj->genesis_daemon->controller;
+
+	return genesis_controller_start_app_from_name(controller, name);
+
+}
+
+
+gboolean genesis_dbusobj_get_nth_entry_name
+	(GenesisDbusObj* obj, gint index, char ** name, GError** error)
+{
+	GenesisController* controller;
+	GenesisAppEntry* entry;
+	
+	g_return_val_if_fail(GENESIS_IS_DBUSOBJ(obj), FALSE);
+	obj = GENESIS_DBUSOBJ(obj);
+	
+	controller = obj->genesis_daemon->controller;
+	
+	entry = genesis_controller_get_nth_entry(controller, index);
+	if ( entry ){
+		*name = g_strdup( genesis_app_entry_get_name(entry) );
+		return TRUE;
+	}else{
+	//FIXME: need to find out the suitable error domain and code
+		g_set_error(error,1,1,"out of entry index");
+		return FALSE;
+	}
+
+}
+
+gboolean genesis_dbusobj_get_category_names
+	(GenesisDbusObj* obj, char *** names, GError** error)
+{
+	GenesisController* controller;
+	
+	g_return_val_if_fail(GENESIS_IS_DBUSOBJ(obj), FALSE);
+	obj = GENESIS_DBUSOBJ(obj);
+	
+	controller = obj->genesis_daemon->controller;
+	
+	*names =  genesis_controller_get_category_names(controller);
+
+	return TRUE;
+
+}
+
+gboolean genesis_dbusobj_get_entry_names_by_category
+	(GenesisDbusObj* obj, char *category, char *** names, GError** error)
+{
+	GenesisController* controller;
+	
+	g_return_val_if_fail(GENESIS_IS_DBUSOBJ(obj), FALSE);
+	obj = GENESIS_DBUSOBJ(obj);
+	
+	controller = obj->genesis_daemon->controller;
+	
+	*names =  genesis_controller_get_entry_names_by_category(controller,category);
+
+	return TRUE;
+}
+
+gboolean genesis_dbusobj_get_app_icon
+	(GenesisDbusObj* obj, char *name, char ** icon, GError** error)
+{
+	GenesisController* controller;
+	GenesisAppEntry* entry;
+	
+	g_return_val_if_fail(GENESIS_IS_DBUSOBJ(obj), FALSE);
+	obj = GENESIS_DBUSOBJ(obj);
+	
+	controller = obj->genesis_daemon->controller;
+	
+	entry = genesis_controller_get_entry_by_name(controller, name);
+	if ( entry ){
+		*icon = g_strdup( genesis_app_entry_get_icon(entry) );
+		return TRUE;
+	}else{
+	//FIXME: need to find out the suitable error domain and code
+		g_set_error(error,1,1,"can not find %s",name);
+		return FALSE;
+	}
+}
+
+gboolean genesis_dbusobj_get_app_exec
+	(GenesisDbusObj* obj, char *name, char ** exec, GError** error)
+{
+	GenesisController* controller;
+	GenesisAppEntry* entry;
+	
+	g_return_val_if_fail(GENESIS_IS_DBUSOBJ(obj), FALSE);
+	obj = GENESIS_DBUSOBJ(obj);
+	
+	controller = obj->genesis_daemon->controller;
+	
+	entry = genesis_controller_get_entry_by_name(controller, name);
+	if ( entry ){
+		*exec = g_strdup( genesis_app_entry_get_exec(entry) );
+		return TRUE;
+	}else{
+	//FIXME: need to find out the suitable error domain and code
+		g_set_error(error,1,1,"can not find %s",name);
+		return FALSE;
+	}
+}
+
+
+gboolean genesis_dbusobj_get_app_showup
+	(GenesisDbusObj* obj, char *name, gboolean* showup, GError** error)
+{
+	GenesisController* controller;
+	GenesisAppEntry* entry;
+	
+	g_return_val_if_fail(GENESIS_IS_DBUSOBJ(obj), FALSE);
+	obj = GENESIS_DBUSOBJ(obj);
+	
+	controller = obj->genesis_daemon->controller;
+	
+	entry = genesis_controller_get_entry_by_name(controller, name);
+	if ( entry ){
+		*showup = genesis_app_entry_is_showup(entry);
+		return TRUE;
+	}else{
+	//FIXME: need to find out the suitable error domain and code
+		g_set_error(error,1,1,"can not find %s",name);
+		return FALSE;
+	}
+}
+
+gboolean genesis_dbusobj_get_app_category_names
+	(GenesisDbusObj* obj, char *name, char *** names, GError** error)
+{
+	GenesisController* controller;
+	GenesisAppEntry* entry;
+	
+	g_return_val_if_fail(GENESIS_IS_DBUSOBJ(obj), FALSE);
+	obj = GENESIS_DBUSOBJ(obj);
+	
+	controller = obj->genesis_daemon->controller;
+	
+	entry = genesis_controller_get_entry_by_name(controller, name);
+	if ( entry ){
+		*names = genesis_app_entry_get_category_names(entry);
+		return TRUE;
+	}else{
+	//FIXME: need to find out the suitable error domain and code
+		g_set_error(error,1,1,"can not find %s",name);
+		return FALSE;
+	}
 }
 
 
@@ -107,7 +277,7 @@ static void handleError(const char* msg, const char* reason, gboolean fatal)
   }
 }
 
-GenesisDbusObj *genesis_dbus_daemon_init()
+GenesisDbusObj *genesis_dbus_daemon_init(GenesisDaemon *daemon)
 {
 
   DBusGConnection* bus = NULL;
@@ -173,6 +343,8 @@ GenesisDbusObj *genesis_dbus_daemon_init()
                                       G_OBJECT(dbusobj));
 
   save_log("dbusobj register to DBUS done\n");
+  
+  dbusobj->genesis_daemon = daemon;
 
   return dbusobj;
 }

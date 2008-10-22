@@ -138,7 +138,6 @@ GenesisController *genesis_controller_get_singleton (void)
   static GenesisController *controller = NULL;
   if (!controller)
     controller = g_object_new (GENESIS_TYPE_CONTROLLER, NULL);
-  save_log("leave\n");
   return controller;
 }
 
@@ -262,6 +261,65 @@ GList* genesis_controller_get_categories (GenesisController *controller)
   return results;
 }
 
+gchar** genesis_controller_get_category_names (GenesisController *controller)
+{
+	GenesisControllerPrivate *priv = GENESIS_CONTROLLER_GET_PRIVATE (controller);
+	GList *categories;
+	GList *tmp;
+	gint length;
+	gint index = 0;
+	gchar **strs_names;
+
+	if (!priv->categories)
+		return NULL;
+
+	categories = g_hash_table_get_values (priv->categories);
+	length = g_list_length(categories);
+	strs_names = g_new (gchar *, (length + 1));
+
+	tmp = categories;
+
+	while (tmp){
+		GenesisCategory *category = tmp->data;
+		if (category->is_primary)
+		strs_names[index++] = g_strdup(category->name);
+		tmp = tmp->next;
+	}
+	strs_names[index] = NULL;
+	g_list_free(categories);
+
+	return strs_names;
+}
+
+
+gchar** genesis_controller_get_entry_names_by_category 
+			(GenesisController *controller, const gchar *category)
+{
+	GenesisControllerPrivate *priv = GENESIS_CONTROLLER_GET_PRIVATE (controller);
+	GenesisCategory *_category = g_hash_table_lookup (priv->categories, category);
+	GenesisAppEntry *entry;
+	GList *tmp;
+	gint length;
+	gint index = 0;
+	gchar **strs_names;
+
+	if ( (!_category) || (!_category->applications))
+		return NULL;
+
+	length = g_list_length(_category->applications);
+	strs_names = g_new (gchar *, (length + 1));
+
+	tmp = _category->applications;
+
+	while (tmp){
+		entry = tmp->data;
+		strs_names[index++] = g_strdup( genesis_app_entry_get_name (entry) );
+		tmp = tmp->next;
+	}
+	strs_names[index] = NULL;
+	
+	return strs_names;
+}
 
 GList* genesis_controller_get_all_categories (GenesisController *controller)
 {
@@ -272,7 +330,6 @@ GList* genesis_controller_get_all_categories (GenesisController *controller)
 
   return g_hash_table_get_values (priv->categories);
 }
-
 
 GList* genesis_controller_get_applications_by_category (GenesisController *controller, const gchar *name)
 {

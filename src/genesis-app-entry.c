@@ -134,13 +134,13 @@ static gchar *genesis_app_entry_get_localized_name (GKeyFile *key_file)
 
     /* if the value has .UTF-8 appended, we */
     /* have to remove that as it's unneeded */
-    g_strdelimit (lang, ".", '\0');
 
     /* this is the nametag for our language */
     namefield = g_strdup_printf ("%s[%s]", G_KEY_FILE_DESKTOP_KEY_NAME, lang);
 
     /* try to get out Name value */
     name = g_key_file_get_string(key_file, G_KEY_FILE_DESKTOP_GROUP, namefield, NULL);
+    g_debug("name=%s\n",name);
 
     g_free(lang);
     g_free(namefield);
@@ -166,6 +166,7 @@ static void genesis_app_entry_pid_watch_callback (GPid pid, gint status, gpointe
   priv->pid = 0;
 }
 
+#if 1
 static void genesis_app_entry_window_opened (WnckScreen *screen, WnckWindow *window, GenesisAppEntry *entry)
 {
   GenesisAppEntryPrivate *priv = GENESIS_APP_ENTRY_GET_PRIVATE (entry);
@@ -179,6 +180,8 @@ static void genesis_app_entry_window_opened (WnckScreen *screen, WnckWindow *win
   if ((WNCK_WINDOW_NORMAL == type) && pid > 0)
     gtk_widget_hide_all (priv->splashscreen);
 }
+
+#endif
 
 /* Public Functions */
 gboolean genesis_app_entry_extract_info (GenesisAppEntry *entry, GHashTable *hashtable)
@@ -242,6 +245,7 @@ gboolean genesis_app_entry_extract_info (GenesisAppEntry *entry, GHashTable *has
                                                KEY_FILE_DESKTOP_KEY_X_SPLASH,
                                                NULL);
 
+#if 1
   splash_abs_path = g_build_filename (DEFAULT_SPLASH_SCREEN_PATH,
                                       priv->splash_screen, NULL);
 
@@ -268,6 +272,9 @@ gboolean genesis_app_entry_extract_info (GenesisAppEntry *entry, GHashTable *has
     g_signal_connect(G_OBJECT (priv->screen), "window_opened", 
 		     G_CALLBACK (genesis_app_entry_window_opened), entry);
 
+
+#endif
+
   categories = g_key_file_get_string_list(
     key_file, G_KEY_FILE_DESKTOP_GROUP, G_KEY_FILE_DESKTOP_KEY_CATEGORIES,
     NULL, NULL);
@@ -292,6 +299,7 @@ gboolean genesis_app_entry_extract_info (GenesisAppEntry *entry, GHashTable *has
      * references */
     priv->categories = g_list_append(priv->categories, category->name);
 
+//---------- what does this mean ?? -----------------------
     if (tmp == categories)
       category->is_primary = 1;
 
@@ -444,4 +452,32 @@ GList *genesis_app_entry_get_categories (GenesisAppEntry *entry)
 {
   GenesisAppEntryPrivate *priv = GENESIS_APP_ENTRY_GET_PRIVATE (entry);
   return g_list_copy(priv->categories);
+}
+
+
+gchar** genesis_app_entry_get_category_names(GenesisAppEntry *entry)
+{
+	GenesisAppEntryPrivate *priv = GENESIS_APP_ENTRY_GET_PRIVATE (entry);
+	GList* category = priv->categories;
+	GList *tmp;
+	gint length;
+	gint index = 0;
+	gchar **strs_names;
+
+	if ( ! category )
+		return NULL;
+
+	length = g_list_length(category);
+	strs_names = g_new (gchar *, (length + 1));
+
+	tmp = category;
+
+	while (tmp){
+		strs_names[index++] = g_strdup( tmp->data );
+		tmp = tmp->next;
+	}
+	strs_names[index] = NULL;
+	
+	return strs_names;
+  
 }

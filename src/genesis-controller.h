@@ -75,6 +75,8 @@ void genesis_controller_remove_entry (GenesisController *controller, GenesisAppE
 void genesis_controller_add_entry (GenesisController *controller, GenesisAppEntry *entry);
 void genesis_controller_add_entry_by_path (GenesisController *controller, const gchar *path);
 GList* genesis_controller_get_categories (GenesisController *controller);
+gchar** genesis_controller_get_category_names (GenesisController *controller);
+gchar** genesis_controller_get_entry_names_by_category(GenesisController *controller, const gchar *category);
 GList* genesis_controller_get_all_applications (GenesisController *controller);
 GList* genesis_controller_get_applications_by_category (GenesisController *controller, const gchar *name);
 GList* genesis_controller_get_all_categories (GenesisController *controller);

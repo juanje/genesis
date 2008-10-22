@@ -25,6 +25,7 @@
 typedef struct {
 
   GObject parent;
+  GenesisDaemon *genesis_daemon;
 
 } GenesisDbusObj;
 
@@ -55,6 +56,6 @@ GType genesis_dbusobj_get_type(void);
 
 
 /* Public functions */
-GenesisDbusObj *genesis_dbus_daemon_init(void);
+GenesisDbusObj *genesis_dbus_daemon_init(GenesisDaemon *daemon);
 
 #endif /* GENESIS_DAEMON_DBUS_H */

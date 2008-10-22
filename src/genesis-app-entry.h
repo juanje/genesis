@@ -75,6 +75,8 @@ gchar *genesis_app_entry_get_category (GenesisAppEntry *entry);
  */
 GList *genesis_app_entry_get_categories (GenesisAppEntry *entry);
 
+gchar** genesis_app_entry_get_category_names(GenesisAppEntry *entry);
+
 G_END_DECLS
 
 #endif /* GENESIS_APP_ENTRY_H */

@@ -52,6 +52,14 @@ GType genesis_proxy_get_type (void);
 
 GenesisProxy *genesis_proxy_get_singleton (void);
 void genesis_proxy_hello (GenesisProxy *proxy, gchar * name);
+gboolean genesis_proxy_start_app_by_name (GenesisProxy *proxy, gchar* name);
+gchar *genesis_proxy_get_nth_entry_name (GenesisProxy *proxy, gint index);
+gchar **genesis_proxy_get_category_names (GenesisProxy *proxy);
+gchar **genesis_proxy_get_entry_names_by_category(GenesisProxy *proxy, gchar *category);
+gchar *genesis_proxy_get_app_icon(GenesisProxy *proxy, gchar *name);
+gchar *genesis_proxy_get_app_exec(GenesisProxy *proxy, gchar *name);
+gchar **genesis_proxy_get_app_category_names(GenesisProxy *proxy, gchar *name);
+gboolean genesis_proxy_get_app_showup(GenesisProxy *proxy, gchar *name);
 
 G_END_DECLS
 

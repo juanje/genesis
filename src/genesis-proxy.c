@@ -101,6 +101,175 @@ void genesis_proxy_hello (GenesisProxy *proxy, gchar * name)
 	
 }
 
+gboolean genesis_proxy_start_app_by_name (GenesisProxy *proxy, 
+						 gchar* name)
+{
+	GenesisProxyPrivate *priv;
+	GError* error = NULL;
+	
+	g_return_val_if_fail(IS_GENESIS_PROXY(proxy), FALSE);
+	proxy = GENESIS_PROXY(proxy);
+
+	priv = GENESIS_PROXY_GET_PRIVATE (proxy);
+
+	org_moblin_genesis_start_app_by_name(priv->dbusproxy, name, &error);
+	if (error != NULL) {
+		g_warning("%s", error->message);
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+
+gchar *genesis_proxy_get_nth_entry_name (GenesisProxy *proxy, 
+			gint index)
+{
+	GenesisProxyPrivate *priv;
+	GError* error = NULL;
+	gchar* name = NULL;
+	
+	g_return_val_if_fail(IS_GENESIS_PROXY(proxy), FALSE);
+	proxy = GENESIS_PROXY(proxy);
+
+	priv = GENESIS_PROXY_GET_PRIVATE (proxy);
+
+	org_moblin_genesis_get_nth_entry_name(priv->dbusproxy, index, &name, &error);
+	if (error != NULL) {
+		g_warning("%s", error->message);
+		return NULL;
+	}
+
+	return name;
+}
+
+
+/* the return gchar** should be freed with g_strfreev by the caller */
+gchar **genesis_proxy_get_category_names (GenesisProxy *proxy)
+{
+	GenesisProxyPrivate *priv;
+	GError* error = NULL;
+	gchar** names = NULL;
+	
+	g_return_val_if_fail(IS_GENESIS_PROXY(proxy), FALSE);
+	proxy = GENESIS_PROXY(proxy);
+
+	priv = GENESIS_PROXY_GET_PRIVATE (proxy);
+
+	org_moblin_genesis_get_category_names(priv->dbusproxy, &names, &error);
+	if (error != NULL) {
+		g_warning("%s", error->message);
+		return NULL;
+	}
+
+	return names;
+}
+
+/* the return gchar** should be freed with g_strfreev by the caller */
+gchar **genesis_proxy_get_entry_names_by_category
+		(GenesisProxy *proxy, gchar *category)
+{
+	GenesisProxyPrivate *priv;
+	GError* error = NULL;
+	gchar** names = NULL;
+	
+	g_return_val_if_fail(IS_GENESIS_PROXY(proxy), FALSE);
+	proxy = GENESIS_PROXY(proxy);
+
+	priv = GENESIS_PROXY_GET_PRIVATE (proxy);
+
+	org_moblin_genesis_get_entry_names_by_category(priv->dbusproxy, category, &names, &error);
+	if (error != NULL) {
+		g_warning("%s", error->message);
+		return NULL;
+	}
+
+	return names;
+}
+
+gchar *genesis_proxy_get_app_icon
+		(GenesisProxy *proxy, gchar *name)
+{
+	GenesisProxyPrivate *priv;
+	GError* error = NULL;
+	gchar* icon = NULL;
+	
+	g_return_val_if_fail(IS_GENESIS_PROXY(proxy), FALSE);
+	proxy = GENESIS_PROXY(proxy);
+
+	priv = GENESIS_PROXY_GET_PRIVATE (proxy);
+
+	org_moblin_genesis_get_app_icon(priv->dbusproxy, name, &icon, &error);
+	if (error != NULL) {
+		g_warning("%s", error->message);
+		return NULL;
+	}
+
+	return icon;
+}
+
+gchar *genesis_proxy_get_app_exec
+		(GenesisProxy *proxy, gchar *name)
+{
+	GenesisProxyPrivate *priv;
+	GError* error = NULL;
+	gchar* exec = NULL;
+	
+	g_return_val_if_fail(IS_GENESIS_PROXY(proxy), FALSE);
+	proxy = GENESIS_PROXY(proxy);
+
+	priv = GENESIS_PROXY_GET_PRIVATE (proxy);
+
+	org_moblin_genesis_get_app_exec(priv->dbusproxy, name, &exec, &error);
+	if (error != NULL) {
+		g_warning("%s", error->message);
+		return NULL;
+	}
+
+	return exec;
+}
+
+gchar **genesis_proxy_get_app_category_names
+		(GenesisProxy *proxy, gchar *name)
+{
+	GenesisProxyPrivate *priv;
+	GError* error = NULL;
+	gchar** cat_names = NULL;
+	
+	g_return_val_if_fail(IS_GENESIS_PROXY(proxy), FALSE);
+	proxy = GENESIS_PROXY(proxy);
+
+	priv = GENESIS_PROXY_GET_PRIVATE (proxy);
+
+	org_moblin_genesis_get_app_category_names(priv->dbusproxy, name, &cat_names, &error);
+	if (error != NULL) {
+		g_warning("%s", error->message);
+		return NULL;
+	}
+
+	return cat_names;
+}
+
+gboolean genesis_proxy_get_app_showup
+		(GenesisProxy *proxy, gchar *name)
+{
+	GenesisProxyPrivate *priv;
+	GError* error = NULL;
+	gboolean showup = FALSE;
+	
+	g_return_val_if_fail(IS_GENESIS_PROXY(proxy), FALSE);
+	proxy = GENESIS_PROXY(proxy);
+
+	priv = GENESIS_PROXY_GET_PRIVATE (proxy);
+
+	org_moblin_genesis_get_app_showup(priv->dbusproxy, name, &showup, &error);
+	if (error != NULL) {
+		g_warning("%s", error->message);
+		return FALSE;
+	}
+
+	return showup;
+}
 
 /* ------------------ the following is net yet used, just collect here -----------------------------*/
 #ifdef NO_THIS_MACRO
@@ -180,29 +349,6 @@ gboolean genesis_proxy_start_app_from_path (GenesisProxy *proxy, gchar *path)
 
   genesis_app_entry_start (entry);
   return TRUE;
-}
-
-gboolean genesis_proxy_start_app_from_name (GenesisProxy *proxy, 
-						 gchar* name)
-{
-  GenesisProxyPrivate *priv = GENESIS_PROXY_GET_PRIVATE (proxy);
-  GList *tmp = priv->applications;
-
-  while (tmp) {
-    GenesisAppEntry *entry = GENESIS_APP_ENTRY(tmp->data);
-
-    /* compare name passed in with app name in list */
-    if (!g_ascii_strcasecmp (genesis_app_entry_get_name (entry), name)) 
-    {
-      genesis_app_entry_start(entry);
-      return TRUE;
-    }
-
-    tmp = tmp->next;
-  }
-
-  g_warning ("Couldn't find app with name = %s\n", name);
-  return FALSE;
 }
 
 GenesisAppEntry *genesis_proxy_get_nth_entry (GenesisProxy *proxy, guint n)

@@ -9,9 +9,43 @@
       <arg type="s" name="who" direction="in"/>
     </method>
 
-    <method name="getname">
-      <arg type="s" name="app_name" direction="out"/>
+    <method name="StartAppByName">
+      <arg type="s" name="name" direction="in"/>
     </method>
-  
+
+    <method name="GetAppIcon">
+      <arg type="s" name="name" direction="in"/>
+      <arg type="s" name="icon" direction="out"/>
+    </method>
+
+    <method name="GetAppExec">
+      <arg type="s" name="name" direction="in"/>
+      <arg type="s" name="exec" direction="out"/>
+    </method>
+
+    <method name="GetAppShowup">
+      <arg type="s" name="name" direction="in"/>
+      <arg type="b" name="showup" direction="out"/>
+    </method>
+
+    <method name="GetAppCategoryNames">
+      <arg type="s" name="name" direction="in"/>
+      <arg type="as" name="categorynames" direction="out"/>
+    </method>
+    
+    <method name="GetNthEntryName">
+      <arg type="i" name="index" direction="in"/>
+      <arg type="s" name="name" direction="out"/>
+    </method>
+
+    <method name="GetCategoryNames">
+      <arg type="as" name="names" direction="out"/>
+    </method>
+
+    <method name="GetEntryNamesByCategory">
+      <arg type="s" name="category" direction="in"/>
+      <arg type="as" name="names" direction="out"/>
+    </method>
+    
   </interface>
 </node>

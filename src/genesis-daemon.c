@@ -19,14 +19,9 @@
  *
  */
 
-#include "genesis-common.h"
+#include "genesis-daemon.h"
 #include "genesis-daemon-dbus.h"
 
-typedef struct _GenesisDaemon
-{
-  GenesisController *controller;
-  GenesisFSMonitor *monitor;
-} GenesisDaemon;
 
 static gboolean applications_list_updated (GenesisFSMonitor *monitor, const gchar *path,
                                            GenesisFSMonitorEventType type, gpointer data)
@@ -133,7 +128,7 @@ static void genesis_daemon_init (GenesisDaemon *daemon)
   daemon->controller = controller;
   daemon->monitor = monitor;
 
-  dbusobj = genesis_dbus_daemon_init();
+  dbusobj = genesis_dbus_daemon_init(daemon);
   
 }
 
