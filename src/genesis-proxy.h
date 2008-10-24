@@ -22,8 +22,9 @@
 #ifndef GENESIS_PROXY_H
 #define GENESIS_PROXY_H
 
-G_BEGIN_DECLS
+#include "genesis-dbus-common.h"
 
+G_BEGIN_DECLS
 
 typedef struct _GenesisProxy GenesisProxy;
 typedef struct _GenesisProxyClass GenesisProxyClass;
@@ -61,41 +62,15 @@ gchar *genesis_proxy_get_app_exec(GenesisProxy *proxy, gchar *name);
 gchar **genesis_proxy_get_app_category_names(GenesisProxy *proxy, gchar *name);
 gboolean genesis_proxy_get_app_showup(GenesisProxy *proxy, gchar *name);
 
+
+typedef gboolean (*GenesisDbusSignalSCallback) (GenesisProxy *proxy, const char *data);
+
+// dbus signal related handling functions
+gboolean genesis_proxy_connect_signal_s_callback
+	(DBusGProxy *proxy, const char* data, gpointer userData);
+void genesis_proxy_connect_signal_type_string
+	(GenesisProxy *proxy, const gchar* signame, GenesisDbusSignalSCallback handler);
+
 G_END_DECLS
-
-
-/* the following is net yet used*/
-#ifdef NO_THIS_MACRO
-
-#define DESKTOP_FILE_SUFFIX         ".desktop"
-#define DESKTOP_DIR                 "/usr/share/applications/"
-
-/**
- * GenesisCategory:
- * @applications: GList of GenesisAppEntry entries in this category
- * @name: Locally allocated gchar name of category.
- * @is_primary: Set to True if any applications list this as their primary
- *              category.
- */
-typedef struct _GenesisCategory {
-  /*< public >*/
-  GList *applications;
-  gchar *name;
-  gboolean is_primary;
-} GenesisCategory;
-
-gboolean genesis_proxy_start_app_from_path (GenesisProxy *proxy, gchar *path);
-gboolean genesis_proxy_start_app_from_name (GenesisProxy *proxy, gchar* name);
-GenesisAppEntry *genesis_proxy_get_nth_entry (GenesisProxy *proxy, guint n);
-GenesisAppEntry *genesis_proxy_get_entry_by_name (GenesisProxy *proxy, gchar* name);
-void genesis_proxy_remove_entry (GenesisProxy *proxy, GenesisAppEntry *entry);
-void genesis_proxy_add_entry (GenesisProxy *proxy, GenesisAppEntry *entry);
-void genesis_proxy_add_entry_by_path (GenesisProxy *proxy, const gchar *path);
-GList* genesis_proxy_get_categories (GenesisProxy *proxy);
-GList* genesis_proxy_get_all_applications (GenesisProxy *proxy);
-GList* genesis_proxy_get_applications_by_category (GenesisProxy *proxy, const gchar *name);
-GList* genesis_proxy_get_all_categories (GenesisProxy *proxy);
-
-#endif
 
 #endif /* GENESIS_PROXY_H */

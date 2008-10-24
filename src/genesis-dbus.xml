@@ -46,6 +46,14 @@
       <arg type="s" name="category" direction="in"/>
       <arg type="as" name="names" direction="out"/>
     </method>
-    
+
+
+    <!-- Signal definitions -->
+
+    <signal name="entry_updated">
+      <arg type="s" name="EntryName" direction="out"/>
+    </signal>
+
+
   </interface>
 </node>

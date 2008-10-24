@@ -79,13 +79,16 @@ static void genesis_app_entry_class_init (GenesisAppEntryClass *klass)
 static void genesis_app_entry_init (GenesisAppEntry *self)
 {
   GenesisAppEntryPrivate *priv = GENESIS_APP_ENTRY_GET_PRIVATE (self);
-  static WnckScreen *screen = NULL;
   priv->pid = 0;
   priv->splashscreen = NULL;
+#ifdef ENABLE_SPLASH
+  static WnckScreen *screen = NULL;
+  
   if (!screen)
     screen = wnck_screen_get_default ();
-
   priv->screen = screen;
+#endif
+
 }
 
 static void genesis_app_entry_get_property (GObject *object, guint prop_id,
@@ -140,7 +143,6 @@ static gchar *genesis_app_entry_get_localized_name (GKeyFile *key_file)
 
     /* try to get out Name value */
     name = g_key_file_get_string(key_file, G_KEY_FILE_DESKTOP_GROUP, namefield, NULL);
-    g_debug("name=%s\n",name);
 
     g_free(lang);
     g_free(namefield);
@@ -166,7 +168,7 @@ static void genesis_app_entry_pid_watch_callback (GPid pid, gint status, gpointe
   priv->pid = 0;
 }
 
-#if 1
+#ifdef ENABLE_SPLASH
 static void genesis_app_entry_window_opened (WnckScreen *screen, WnckWindow *window, GenesisAppEntry *entry)
 {
   GenesisAppEntryPrivate *priv = GENESIS_APP_ENTRY_GET_PRIVATE (entry);
@@ -180,7 +182,6 @@ static void genesis_app_entry_window_opened (WnckScreen *screen, WnckWindow *win
   if ((WNCK_WINDOW_NORMAL == type) && pid > 0)
     gtk_widget_hide_all (priv->splashscreen);
 }
-
 #endif
 
 /* Public Functions */
@@ -189,9 +190,13 @@ gboolean genesis_app_entry_extract_info (GenesisAppEntry *entry, GHashTable *has
   GenesisAppEntryPrivate *priv = GENESIS_APP_ENTRY_GET_PRIVATE (entry);
   GKeyFile *key_file = NULL;
   gchar **categories = NULL, **onlyshowin = NULL;
+  gchar **tmp;
+
+#ifdef ENABLE_SPLASH
   gchar *splash_abs_path = NULL;
   GtkWidget *image = NULL;
-  gchar **tmp;
+#endif
+ 
 
   if (!priv->filename)
   {
@@ -245,7 +250,7 @@ gboolean genesis_app_entry_extract_info (GenesisAppEntry *entry, GHashTable *has
                                                KEY_FILE_DESKTOP_KEY_X_SPLASH,
                                                NULL);
 
-#if 1
+#ifdef ENABLE_SPLASH
   splash_abs_path = g_build_filename (DEFAULT_SPLASH_SCREEN_PATH,
                                       priv->splash_screen, NULL);
 
@@ -272,14 +277,12 @@ gboolean genesis_app_entry_extract_info (GenesisAppEntry *entry, GHashTable *has
     g_signal_connect(G_OBJECT (priv->screen), "window_opened", 
 		     G_CALLBACK (genesis_app_entry_window_opened), entry);
 
-
 #endif
 
   categories = g_key_file_get_string_list(
     key_file, G_KEY_FILE_DESKTOP_GROUP, G_KEY_FILE_DESKTOP_KEY_CATEGORIES,
     NULL, NULL);
 
-  printf("%s categories: ", priv->name);
   tmp = categories;
   while (tmp && *tmp) {
     GenesisCategory *category;

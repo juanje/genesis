@@ -31,4 +31,14 @@
 #define GENESIS_DBUSOBJ_SERVICE_INTERFACE   "org.moblin.genesis"
 
 
+/* Signal Defination */
+
+#define SIGNAL_GENESIS_ENTRY_UPDATED    "entry_updated"
+
+typedef enum {
+	E_SIGNAL_GENESIS_ENTRY_UPDATED,
+	E_SIGNAL_GENESIS_COUNT
+} GenesisSignalNum;
+
+
 #endif /* GENESIS_DBUS_COMMON_H */

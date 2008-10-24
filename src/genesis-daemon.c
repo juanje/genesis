@@ -19,10 +19,12 @@
  *
  */
 
+#include "genesis-common.h"
 #include "genesis-daemon.h"
+#include "genesis-dbus-common.h"
 #include "genesis-daemon-dbus.h"
 
-
+#if 1
 static gboolean applications_list_updated (GenesisFSMonitor *monitor, const gchar *path,
                                            GenesisFSMonitorEventType type, gpointer data)
 {
@@ -36,6 +38,10 @@ static gboolean applications_list_updated (GenesisFSMonitor *monitor, const gcha
 
   if (!path && !g_str_has_suffix (path, DESKTOP_FILE_SUFFIX))
     return FALSE;
+
+//FIXME: just a test code for sending out event here. need to come back and refine it.
+  genesis_dbusobj_emit_signal(  ( (GenesisDaemon*)data)->dbusobj,
+  			E_SIGNAL_GENESIS_ENTRY_UPDATED, "Entry Updated");
 
   desktop_entry = g_strdup (path);
   switch (type)
@@ -97,6 +103,8 @@ static gboolean applications_list_updated (GenesisFSMonitor *monitor, const gcha
   return TRUE;
 }
 
+#endif
+
 static void genesis_daemon_init (GenesisDaemon *daemon)
 {
   GenesisController *controller = NULL;
@@ -123,12 +131,14 @@ static void genesis_daemon_init (GenesisDaemon *daemon)
   }
   save_log ("monitor singleton geted\n");
 
-  genesis_fs_monitor_add (monitor, DESKTOP_DIR, IN_ALL_EVENTS, applications_list_updated, controller);
-
   daemon->controller = controller;
   daemon->monitor = monitor;
 
   dbusobj = genesis_dbus_daemon_init(daemon);
+
+  daemon->dbusobj = dbusobj;
+
+  genesis_fs_monitor_add (monitor, DESKTOP_DIR, IN_ALL_EVENTS, applications_list_updated, daemon);
   
 }
 
@@ -167,12 +177,15 @@ int main (int argc, char **argv)
   close (STDERR_FILENO);
 #endif
 
-  //g_type_init ();
+#ifndef ENABLE_SPLASH
+  	g_type_init ();
+#else
   gtk_init(&argc, &argv);
+#endif
 
   if (!g_thread_supported ())
     g_thread_init (NULL);
-
+  
   daemon = g_new0 (GenesisDaemon, 1);
 
   printf("in main, start to call genesis_daemon_init\n");

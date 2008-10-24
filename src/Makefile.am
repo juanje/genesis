@@ -65,4 +65,5 @@ genesisd_LDADD = $(top_builddir)/src/libgenesis.la
 
 genesisd_SOURCES = genesis-daemon.c genesis-daemon-dbus.c
 
+
 CLEANFILES = $(BUILT_SOURCES) *~ *.la *.o *.so *.lo *.loT *.pc

@@ -22,12 +22,13 @@
 #ifndef GENESIS_DAEMON_H
 #define GENESIS_DAEMON_H
 
-#include "genesis-common.h"
+struct  _GenesisDbusObj;
 
 typedef struct _GenesisDaemon
 {
   GenesisController *controller;
   GenesisFSMonitor *monitor;
+  struct _GenesisDbusObj *dbusobj;
 } GenesisDaemon;
 
 #endif /* GENESIS_DAEMON_H */

@@ -19,7 +19,6 @@
  *
  */
 
-#include "gtk/gtk.h"
 #include "genesis-common.h"
 
 static gboolean monitor_callback (GenesisFSMonitor *monitor, const gchar *path, 
@@ -31,21 +30,34 @@ static gboolean monitor_callback (GenesisFSMonitor *monitor, const gchar *path,
 
 int main(int argc, char *argv[])
 {
-  GenesisFSMonitor *monitor = NULL;
+	GenesisFSMonitor *monitor = NULL;
+	GMainLoop* mainloop;
+//	GError* error = NULL;
 
-  gtk_init (&argc, &argv);
+	g_type_init ();
 
-  monitor = genesis_fs_monitor_get_singleton ();
+	if (!g_thread_supported ())
+		g_thread_init (NULL);
+	
+	monitor = genesis_fs_monitor_get_singleton ();
 
-  if (!monitor)
-  {
-    g_warning ("Failed to get probot monitor singleton, returned.\n");
-    return -1;
-  }
 
-  genesis_fs_monitor_add (monitor, "/usr/share/applications/", IN_ALL_EVENTS, monitor_callback, NULL);
+	if (!monitor)
+	{
+		g_warning ("Failed to get probot monitor singleton, returned.\n");
+		return -1;
+	}
+	
+	genesis_fs_monitor_add (monitor, "/usr/share/applications/", IN_ALL_EVENTS, monitor_callback, NULL);
 
-  gtk_main ();
+	mainloop = g_main_loop_new(NULL, FALSE);
+
+	if (mainloop == NULL) {
+	 	g_error("Failed to create the mainloop\n");
+	}
+	
+	g_main_loop_run(mainloop);
+
 
   return 0;
 }

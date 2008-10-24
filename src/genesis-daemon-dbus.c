@@ -22,10 +22,11 @@
 #include <glib.h>
 #include <dbus/dbus-glib.h>
 #include <stdlib.h> /* exit, EXIT_FAILURE */
-#include "genesis-dbus-common.h"
 #include "genesis-utils.h"
 
+#include "genesis-common.h"
 #include "genesis-daemon.h"
+#include "genesis-dbus-common.h"
 #include "genesis-daemon-dbus.h"
 
 /* Utility macro to define the value_object GType structure. */
@@ -61,11 +62,16 @@ gboolean genesis_dbusobj_get_app_category_names
 
 #include "genesis-daemon-dbus-glue.h"
 
+const gchar* GenesisSignalNames[E_SIGNAL_GENESIS_COUNT] = 
+{    SIGNAL_GENESIS_ENTRY_UPDATED
+};
 
-static void genesis_dbusobj_init(GenesisDbusObj* obj) {
-  save_log("Called\n");
 
-  g_assert(obj != NULL);
+static void genesis_dbusobj_init(GenesisDbusObj* obj)
+{
+
+	save_log("Called\n");
+	g_assert(obj != NULL);
 
 }
 
@@ -75,28 +81,50 @@ static void genesis_dbusobj_init(GenesisDbusObj* obj) {
  * Registers the type into the GLib/D-Bus wrapper so that it may add
  * its own magic.
  */
-static void genesis_dbusobj_class_init(GenesisDbusObjClass* klass) {
+static void genesis_dbusobj_class_init(GenesisDbusObjClass* klass) 
+{
+	gint i;
+	guint signalId;
+	
+	g_assert(klass != NULL);
 
-  save_log("Called\n");
+	for (i = 0; i < E_SIGNAL_GENESIS_COUNT; i++){
+		signalId = g_signal_new(GenesisSignalNames[i],
+ 			G_OBJECT_CLASS_TYPE(klass),
+			G_SIGNAL_RUN_LAST,
+			0,
+			NULL,
+			NULL,
+			g_cclosure_marshal_VOID__STRING,
+			G_TYPE_NONE,
+			1,
+			G_TYPE_STRING);
 
-  g_assert(klass != NULL);
+		klass->signals[i] = signalId;
+	}
 
-  save_log("Binding to GLib/D-Bus\n");
-
-  /* Time to bind this GType into the GLib/D-Bus wrappers.
-     NOTE: This is not yet "publishing" the object on the D-Bus, but
-           since it is only allowed to do this once per class
-           creation, the safest place to put it is in the class
-           initializer.
-           Specifically, this function adds "method introspection
-           data" to the class so that methods can be called over
-           the D-Bus. */
-  dbus_g_object_type_install_info(GENESIS_TYPE_DBUSOBJ,
+	dbus_g_object_type_install_info(GENESIS_TYPE_DBUSOBJ,
                                  &dbus_glib_genesis_dbusobj_object_info);
 
-  save_log("Done\n");
+	save_log("Binding to dbus Done\n");
   /* All done. Class is ready to be used for instantiating objects */
 }
+
+
+void genesis_dbusobj_emit_signal
+	(GenesisDbusObj* obj, GenesisSignalNum num, const gchar* message)
+{
+
+	GenesisDbusObjClass* klass = GENESIS_DBUSOBJ_GET_CLASS(obj);
+
+	g_assert((num < E_SIGNAL_GENESIS_COUNT) && (num >= 0));
+
+	g_debug("Emitting signal id %d, with message '%s'", num, message);
+
+	g_signal_emit(obj, klass->signals[num], 0, message);
+
+}
+
 
 gboolean genesis_dbusobj_hello(GenesisDbusObj* obj, char * who, GError** error)
 {
@@ -104,10 +132,8 @@ gboolean genesis_dbusobj_hello(GenesisDbusObj* obj, char * who, GError** error)
 	g_return_val_if_fail(GENESIS_IS_DBUSOBJ(obj), FALSE);
 	obj = GENESIS_DBUSOBJ(obj);
 	
-	save_log("hello %s", who);
-
+	//save_log("hello %s", who);
 	return TRUE;
-
 }
 
 gboolean genesis_dbusobj_start_app_by_name

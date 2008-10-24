@@ -109,6 +109,8 @@ static gpointer genesis_fs_monitor_main_thread (gpointer data)
     if (!ret_event)
       continue;
 
+    g_print("fs monitor got event\n");
+
     node = genesis_fs_monitor_get_node_by_wd (ret_event->wd);
 
     if (!node)

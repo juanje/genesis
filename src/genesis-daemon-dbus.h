@@ -22,19 +22,22 @@
 #ifndef GENESIS_DAEMON_DBUS_H
 #define GENESIS_DAEMON_DBUS_H
 
-typedef struct {
+struct  _GenesisDbusObj{
 
-  GObject parent;
-  GenesisDaemon *genesis_daemon;
+	GObject parent;
+	GenesisDaemon *genesis_daemon;
+};
 
-} GenesisDbusObj;
+typedef struct _GenesisDbusObj GenesisDbusObj;
+
 
 /* Per class state. */
 
 typedef struct {
-
-  GObjectClass parent;
+	GObjectClass parent;
+	guint signals[E_SIGNAL_GENESIS_COUNT];
 } GenesisDbusObjClass;
+
 
 GType genesis_dbusobj_get_type(void);
 
@@ -57,5 +60,10 @@ GType genesis_dbusobj_get_type(void);
 
 /* Public functions */
 GenesisDbusObj *genesis_dbus_daemon_init(GenesisDaemon *daemon);
+
+/* Signal Function Defination */
+
+void genesis_dbusobj_emit_signal
+	(GenesisDbusObj* obj, GenesisSignalNum num, const gchar* message);
 
 #endif /* GENESIS_DAEMON_DBUS_H */

@@ -19,6 +19,7 @@
  *
  */
 
+#include <dbus/dbus-glib.h>
 #include "genesis-common.h"
 #include "genesis-proxy.h"
 
@@ -76,10 +77,16 @@ void print_entry_info_by_name(GenesisProxy *proxy, gchar *name)
 	}
 }
 
+static gboolean genesis_entry_updated_callback(GenesisProxy *proxy, const gchar *info)
+{
+	g_print ("event happened : %s\n", info);
+	return TRUE;
+}
+
 int main(int argc, char *argv[])
 {
 	GenesisProxy *proxy = NULL;
-//	GMainLoop* mainloop;
+	GMainLoop* mainloop;
 //	GError* error = NULL;
 	guint index = 0;
 	gchar *name = NULL;
@@ -127,7 +134,12 @@ int main(int argc, char *argv[])
 	g_print("now, start a terminal by name\n");
 	genesis_proxy_start_app_by_name(proxy, "terminal");
 
-#if 0
+	g_print("connect signal callback\n");
+	genesis_proxy_connect_signal_type_string
+		(proxy, SIGNAL_GENESIS_ENTRY_UPDATED, genesis_entry_updated_callback );
+
+	g_print("start main loop\n");
+		
 	mainloop = g_main_loop_new(NULL, FALSE);
 
 	if (mainloop == NULL) {
@@ -135,7 +147,6 @@ int main(int argc, char *argv[])
 	}
 	
 	g_main_loop_run(mainloop);
-#endif
 
   return 0;
 }
