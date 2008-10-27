@@ -41,4 +41,9 @@ typedef enum {
 } GenesisSignalNum;
 
 
+
+typedef enum {
+	GENESIS_DBUS_TEST_EMIT_SIGNAL
+} GenesisDbusTestID;
+
 #endif /* GENESIS_DBUS_COMMON_H */

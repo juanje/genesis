@@ -5,6 +5,10 @@
 
     <!-- Method definitions -->
 
+    <method name="test">
+      <arg type="i" name="id" direction="in"/>
+    </method>
+
     <method name="hello">
       <arg type="s" name="who" direction="in"/>
     </method>

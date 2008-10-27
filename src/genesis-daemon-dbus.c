@@ -35,6 +35,8 @@ G_DEFINE_TYPE( GenesisDbusObj, genesis_dbusobj, G_TYPE_OBJECT)
 gboolean genesis_dbusobj_hello
 	(GenesisDbusObj* obj, char * who, GError** error);
 
+gboolean genesis_dbusobj_test(GenesisDbusObj* obj, gint id, GError** error);
+
 gboolean genesis_dbusobj_start_app_by_name
 	(GenesisDbusObj* obj, char * name, GError** error);
 
@@ -119,8 +121,6 @@ void genesis_dbusobj_emit_signal
 
 	g_assert((num < E_SIGNAL_GENESIS_COUNT) && (num >= 0));
 
-	g_debug("Emitting signal id %d, with message '%s'", num, message);
-
 	g_signal_emit(obj, klass->signals[num], 0, message);
 
 }
@@ -132,9 +132,26 @@ gboolean genesis_dbusobj_hello(GenesisDbusObj* obj, char * who, GError** error)
 	g_return_val_if_fail(GENESIS_IS_DBUSOBJ(obj), FALSE);
 	obj = GENESIS_DBUSOBJ(obj);
 	
-	//save_log("hello %s", who);
+	save_log("hello %s", who);
 	return TRUE;
 }
+
+gboolean genesis_dbusobj_test(GenesisDbusObj* obj, gint id, GError** error)
+{
+
+	g_return_val_if_fail(GENESIS_IS_DBUSOBJ(obj), FALSE);
+	obj = GENESIS_DBUSOBJ(obj);
+	
+	switch (id){
+		case GENESIS_DBUS_TEST_EMIT_SIGNAL:
+			genesis_dbusobj_emit_signal( obj, E_SIGNAL_GENESIS_ENTRY_UPDATED,"Call From Test" );
+			break;
+		default:
+			save_log("Do not have this test id : %d\n",id);
+	}
+	return TRUE;
+}
+
 
 gboolean genesis_dbusobj_start_app_by_name
 	(GenesisDbusObj* obj, char * name, GError** error)
