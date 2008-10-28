@@ -21,7 +21,7 @@
 
 #include "genesis-common.h"
 
-#define MAXIMUM_NUMBER 4096
+#define MAX_BUF_LEN 1024
 
 #define GENESIS_FS_MONITOR_GET_PRIVATE(object) \
         (G_TYPE_INSTANCE_GET_PRIVATE ((object), GENESIS_TYPE_FS_MONITOR, GenesisFSMonitorPrivate))
@@ -40,7 +40,10 @@ struct _GenesisFSMonitorPrivate
 {
   GThread *thread; 
   gint inotify_handle;
-  struct inotify_event event[MAXIMUM_NUMBER];
+  union{
+    char data[MAX_BUF_LEN];
+    struct inotify_event event;
+  }uevent;
 };
 
 static GList *monitored_list;
@@ -65,18 +68,19 @@ static GenesisWatchNode *genesis_fs_monitor_get_node_by_wd (gint watch_descripto
   return NULL;
 }
 
-static struct inotify_event* genesis_fs_monitor_get_next_event (GenesisFSMonitor *monitor)
+static gint genesis_fs_monitor_get_events (GenesisFSMonitor *monitor, char **buffer)
 {
   GenesisFSMonitorPrivate *priv = GENESIS_FS_MONITOR_GET_PRIVATE (monitor);
   static fd_set set;
   guint read_out_bytes;
   gint ret;
 
+
   FD_ZERO(&set);
   FD_SET(priv->inotify_handle, &set);
   ret = select (priv->inotify_handle + 1, &set, NULL, NULL, NULL);
   if (ret <= 0)
-    return NULL;
+    return ret;
 
   do
   {
@@ -86,59 +90,89 @@ static struct inotify_event* genesis_fs_monitor_get_next_event (GenesisFSMonitor
   } while (!ret && read_out_bytes < sizeof (struct inotify_event));
 
   if (-1 == ret)
-    return NULL;
+    return ret;
 
-  read_out_bytes = read (priv->inotify_handle, &priv->event[0], sizeof(struct inotify_event)*MAXIMUM_NUMBER);
+  if (read_out_bytes > MAX_BUF_LEN){
+  	read_out_bytes = MAX_BUF_LEN;
+  }
 
-  if (read_out_bytes <= 0)
-    return NULL;
+  read_out_bytes = read(priv->inotify_handle, &priv->uevent.data, read_out_bytes);
 
-  return &priv->event[0];
+  g_return_val_if_fail( read_out_bytes >= sizeof(struct inotify_event), -1);
+  	
+  *buffer = &priv->uevent.data[0];
+  return read_out_bytes;
 }
 
 static gpointer genesis_fs_monitor_main_thread (gpointer data)
 {
-  GenesisFSMonitor *monitor = GENESIS_FS_MONITOR (data);
-  struct inotify_event *ret_event;
-  GenesisWatchNode *node = NULL;
+	GenesisFSMonitor *monitor = GENESIS_FS_MONITOR (data);
+	char *buffer = NULL;
+	struct inotify_event *event = NULL;
+	GenesisWatchNode *node = NULL;
+	gint events_length = -1;
+	gint tmp_len;
 
-  while (1)
-  {
-    ret_event = genesis_fs_monitor_get_next_event (monitor);
+	while (1)
+	{
+		events_length = genesis_fs_monitor_get_events(monitor, &buffer);
 
-    if (!ret_event)
-      continue;
+		if (events_length < 0)
+			continue;
 
-    g_print("fs monitor got event\n");
+		while( events_length > 0){
+			event = (struct inotify_event *)buffer;
+			tmp_len = (sizeof (struct inotify_event) + event->len);
+			node = genesis_fs_monitor_get_node_by_wd (event->wd);
 
-    node = genesis_fs_monitor_get_node_by_wd (ret_event->wd);
+			if (!node){
+				buffer += tmp_len;
+				events_length -= tmp_len;
+				continue;
+			}
 
-    if (!node)
-      continue;
+			//g_print("path=%s, name=%s\n",node->path, event->name);
+			switch (event->mask){
 
-    switch (ret_event->mask)
-    {
-      case IN_MODIFY:
-      case IN_CREATE:
-      case IN_MOVED_TO:
-        save_log ("IN_MODIFY | IN_CREATE | IN_MOVED_TO :: ret_event->mask is %d\n", ret_event->mask);
-        g_signal_emit_by_name (monitor, "directory-updated", g_build_filename (node->path, ret_event->name, NULL), node, EVENT_CREATED);
-        break;
-      case IN_MOVED_FROM:
-      case IN_DELETE:
-        save_log ("IN_MOVED_FROM | IN_DELETE :: ret_event->mask is %d\n", ret_event->mask);
-        g_signal_emit_by_name (monitor, "directory-updated", g_build_filename (node->path, ret_event->name, NULL), node, EVENT_REMOVED);
-        break;
-      case IN_CLOSE_WRITE:
-        save_log ("IN_CLOSE_WRITE :: ret_event->mask is %d\n", ret_event->mask);
-        g_signal_emit_by_name (monitor, "directory-updated", g_build_filename (node->path, ret_event->name, NULL), node, EVENT_MODIFIED);
-        break;
-      default:
-        break;
-    }
-  }
+				// seems IN_CLOSE_WRITE and IN_DELETE is enough for us to detect the desktop file change
+				// using move to change the name of desktop file do not change the contents, so we don't care.
 
-  return NULL;
+				#if 0
+				//seems that create the file will always ended by close_write. so we might need to ignore this event.
+				case IN_CREATE:
+					save_log ("IN_CREATE, event->mask is %d\n", event->mask);
+					g_signal_emit_by_name (monitor, "directory-updated", g_build_filename (node->path, event->name, NULL), node, EVENT_CREATED);
+					break;
+				#endif
+				
+				#if 0
+				//seems that modify the file will always ended by close_write. so we might need to ignore this event.
+				case IN_MODIFY:
+					save_log ("IN_MODIFY, event->mask is %d\n", event->mask);
+					g_signal_emit_by_name (monitor, "directory-updated", g_build_filename (node->path, event->name, NULL), node, EVENT_MODIFIED);
+					break;
+				#endif
+
+				case IN_CLOSE_WRITE:
+					save_log ("IN_CLOSE_WRITE, event->mask is %d\n", event->mask);
+					g_signal_emit_by_name (monitor, "directory-updated", g_build_filename (node->path, event->name, NULL), node, EVENT_MODIFIED);
+					break;
+					
+				case IN_DELETE:
+					save_log ("IN_DELETE, event->mask is %d\n", event->mask);
+					g_signal_emit_by_name (monitor, "directory-updated", g_build_filename (node->path, event->name, NULL), node, EVENT_REMOVED);
+					break;
+
+				default:
+					break;
+			}
+
+			buffer += tmp_len;
+			events_length -= tmp_len;
+		}
+	}
+
+	return NULL;
 }
 
 static void genesis_fs_monitor_finalize (GObject *object)
