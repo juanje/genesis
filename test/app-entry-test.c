@@ -22,6 +22,8 @@
 #include "gtk/gtk.h"
 #include "genesis-common.h"
 
+#define DEFAULT_DESKTOP_DIR	"/usr/share/applications/"
+
 static void tree_view_append_entry (GtkTreeModel *model, gchar *entry_name);
 
 static void app_selection_changed_callback (GtkTreeSelection *selection, gpointer user_data)
@@ -35,6 +37,8 @@ static void app_selection_changed_callback (GtkTreeSelection *selection, gpointe
   gchar *entry_info = NULL;
   GenesisController *controller = genesis_controller_get_singleton ();
   GenesisAppEntry *entry = NULL;
+
+  genesis_controller_init_application_lists (controller, DEFAULT_DESKTOP_DIR);
 
   if (gtk_tree_selection_get_selected (selection, &model, &iter))
   {

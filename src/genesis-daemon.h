@@ -22,13 +22,23 @@
 #ifndef GENESIS_DAEMON_H
 #define GENESIS_DAEMON_H
 
+#define DEFAULT_DESKTOP_DIR	"/usr/share/applications/"
+
 struct  _GenesisDbusObj;
 
 typedef struct _GenesisDaemon
 {
-  GenesisController *controller;
-  GenesisFSMonitor *monitor;
-  struct _GenesisDbusObj *dbusobj;
+	GenesisController *controller;
+	GenesisFSMonitor *monitor;
+	struct _GenesisDbusObj *dbusobj;
 } GenesisDaemon;
+
+
+typedef struct _genesisd_opts {
+	gboolean no_daemon;
+	gchar *desktop_files_dir;
+}genesisd_opts;
+
+extern genesisd_opts genesisd;
 
 #endif /* GENESIS_DAEMON_H */

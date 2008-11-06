@@ -43,7 +43,7 @@ struct _GenesisControllerPrivate
   GList *applications;
 };
 
-static GList *genesis_controller_append_applications (GenesisController *self)
+static GList *genesis_controller_append_applications (GenesisController *self, gchar *path)
 {
   GenesisControllerPrivate *priv = GENESIS_CONTROLLER_GET_PRIVATE (self);
   DIR *dir_handle = NULL;
@@ -51,13 +51,13 @@ static GList *genesis_controller_append_applications (GenesisController *self)
   struct stat buf;
   gchar *desktop_path = NULL;
 
-  if ((dir_handle = opendir(DESKTOP_DIR)) == NULL) {
-    g_warning ("Error reading file '%s'\n", DESKTOP_DIR);
+  if ((dir_handle = opendir(path)) == NULL) {
+    g_error ("Error reading file '%s'\n", path);
     return priv->applications;
   }
 
   while ((d = readdir (dir_handle)) != NULL) {
-    desktop_path = g_build_filename (DESKTOP_DIR, d->d_name, NULL);
+    desktop_path = g_build_filename (path, d->d_name, NULL);
 
     if ((stat (desktop_path, &buf) == 0) &&
         S_ISREG (buf.st_mode) &&
@@ -91,8 +91,6 @@ static void genesis_controller_finalize (GObject *object)
 static void genesis_controller_class_init (GenesisControllerClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
-
-  save_log("enter %s\n",__func__);
 
   g_type_class_add_private (klass, sizeof (GenesisControllerPrivate));
 
@@ -128,7 +126,6 @@ static void genesis_controller_init (GenesisController *self)
   priv->categories = g_hash_table_new_full(
     g_str_hash, g_str_equal, NULL, (GDestroyNotify)genesis_category_destroy); 
 
-  priv->applications = genesis_controller_append_applications (self);
 }
 
 /* Public Functions */
@@ -140,6 +137,15 @@ GenesisController *genesis_controller_get_singleton (void)
     controller = g_object_new (GENESIS_TYPE_CONTROLLER, NULL);
   return controller;
 }
+
+/* this function must be called after genesis_controller_get_singleton is been called for the first time */
+void genesis_controller_init_application_lists (GenesisController *controller, gchar *path)
+{
+  GenesisControllerPrivate *priv = GENESIS_CONTROLLER_GET_PRIVATE (controller);
+
+  priv->applications = genesis_controller_append_applications (controller, path);
+}
+
 
 gboolean genesis_controller_start_app_from_path (GenesisController *controller, gchar *path)
 {

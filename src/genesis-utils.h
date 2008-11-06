@@ -32,15 +32,8 @@ G_BEGIN_DECLS
 gchar* uri_to_path (const gchar *uri);
 gchar* path_to_uri (gchar *path);
 
-//void save_log (const gchar *format, ...);
-
-#ifndef NODAEMON
-void save_log (const gchar *format, ...);
-#else
-
 #define save_log(fmtstr, args...) (g_print("%s:" fmtstr "\n", __func__, ##args))
 
-#endif
 
 G_END_DECLS
 

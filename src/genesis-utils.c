@@ -38,7 +38,7 @@ gchar* path_to_uri (gchar *path)
   return g_strconcat ("file://", path, NULL);
 }
 
-#ifndef NODAEMON
+#if 0
 void save_log (const gchar *format, ...)
 {
   FILE* log_file = NULL;

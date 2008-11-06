@@ -312,11 +312,9 @@ gboolean genesis_app_entry_extract_info (GenesisAppEntry *entry, GHashTable *has
     category->applications = g_list_prepend(category->applications, 
 					    G_OBJECT(entry));
 
-    printf("%s ", *tmp);
-
     tmp++;
   }
-  printf("\n");
+
   g_strfreev(categories);
 
   /* Free the storage for the key_file */

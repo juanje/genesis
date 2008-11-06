@@ -24,6 +24,16 @@
 #include "genesis-dbus-common.h"
 #include "genesis-daemon-dbus.h"
 
+
+genesisd_opts genesisd;
+static GOptionEntry opt_entries[] =
+{
+  { "path", 'p', 0, G_OPTION_ARG_STRING, &genesisd.desktop_files_dir, "Path of the DESKTOP Files", "/PATH/TO/DESKTOP_FILES_DIR/"},
+  { "no-daemon", 'n', 0, G_OPTION_ARG_NONE, &genesisd.no_daemon, "Do not daemonized", NULL },
+  { NULL }
+};
+
+
 #if 1
 static gboolean applications_list_updated (GenesisFSMonitor *monitor, const gchar *path,
                                            GenesisFSMonitorEventType type, gpointer data)
@@ -122,6 +132,8 @@ static void genesis_daemon_init (GenesisDaemon *daemon)
   }
   save_log ("controller singleton geted\n");
 
+  genesis_controller_init_application_lists (controller, genesisd.desktop_files_dir);
+
   monitor = genesis_fs_monitor_get_singleton ();
 
   if (!monitor)
@@ -138,44 +150,53 @@ static void genesis_daemon_init (GenesisDaemon *daemon)
 
   daemon->dbusobj = dbusobj;
 
-  genesis_fs_monitor_add (monitor, DESKTOP_DIR, IN_ALL_EVENTS, applications_list_updated, daemon);
+  genesis_fs_monitor_add (monitor, genesisd.desktop_files_dir, IN_ALL_EVENTS, applications_list_updated, daemon);
   
 }
 
 int main (int argc, char **argv)
 {
-  GenesisDaemon *daemon = NULL;
-  GMainLoop *loop;
-
-#ifndef NODAEMON
-  pid_t pid, sid;
+	GenesisDaemon *daemon = NULL;
+	GMainLoop *loop;
+	GError *error = NULL;
+	GOptionContext *context;
   
-  pid = fork ();
-  if (pid > 0)
-    exit (EXIT_SUCCESS);
-  else if (pid < 0)
-    exit (EXIT_FAILURE);
+	genesisd.no_daemon = FALSE;
+	genesisd.desktop_files_dir = DEFAULT_DESKTOP_DIR;
 
-  save_log ("now in the child process\n");
-  umask (0);
+	context = g_option_context_new ("- Genesis : Life Cycle Manager");
+	g_option_context_add_main_entries (context, opt_entries, NULL);
+	if (!g_option_context_parse (context, &argc, &argv, &error)){
+		g_print ("option parsing failed: %s\n", error->message);
+		return -1;
+	}
 
-  sid = setsid ();
-  if (sid < 0)
-  {
-    save_log ("setsid : exit (EXIT_FAILURE)\n");
-    exit (EXIT_FAILURE);
-  }
+	if (!genesisd.no_daemon){
+		pid_t pid, sid;
+  
+		pid = fork ();
+		if (pid > 0)
+			exit (EXIT_SUCCESS);
+		else if (pid < 0)
+			exit (EXIT_FAILURE);
 
-  if (chdir ("/") < 0)
-  {
-    save_log ("chdir : exit (EXIT_FAILURE)\n");
-    exit (EXIT_FAILURE);
-  }
+		umask (0);
 
-  close (STDIN_FILENO);
-  close (STDOUT_FILENO);
-  close (STDERR_FILENO);
-#endif
+		sid = setsid ();
+		if (sid < 0){
+			save_log ("setsid : exit (EXIT_FAILURE)\n");
+			exit (EXIT_FAILURE);
+		}
+
+		if (chdir ("/") < 0){
+			save_log ("chdir : exit (EXIT_FAILURE)\n");
+			exit (EXIT_FAILURE);
+		}
+
+		//close (STDIN_FILENO);
+		close (STDOUT_FILENO);
+		close (STDERR_FILENO);
+	}
 
 #ifndef ENABLE_SPLASH
   	g_type_init ();
@@ -188,7 +209,7 @@ int main (int argc, char **argv)
   
   daemon = g_new0 (GenesisDaemon, 1);
 
-  printf("in main, start to call genesis_daemon_init\n");
+  g_print("in main, start to call genesis_daemon_init\n");
 
   save_log("in main, start to call genesis_daemon_init\n");
 

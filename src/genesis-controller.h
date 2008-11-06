@@ -25,7 +25,6 @@
 G_BEGIN_DECLS
 
 #define DESKTOP_FILE_SUFFIX         ".desktop"
-#define DESKTOP_DIR                 "/usr/share/applications/"
 
 /**
  * GenesisCategory:
@@ -67,6 +66,7 @@ GType genesis_controller_get_type (void);
 /* Public functions */
 
 GenesisController *genesis_controller_get_singleton (void);
+void genesis_controller_init_application_lists (GenesisController *controller, gchar *path);
 gboolean genesis_controller_start_app_from_path (GenesisController *controller, gchar *path);
 gboolean genesis_controller_start_app_from_name (GenesisController *controller, gchar* name);
 GenesisAppEntry *genesis_controller_get_nth_entry (GenesisController *controller, guint n);
